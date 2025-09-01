@@ -1,0 +1,39 @@
+# Node modules (never commit this)
+node_modules/
+
+# Build output
+/build
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Env files (for API keys, etc.)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE-specific
+.vscode/
+.idea/
+
+# OS specific
+.AppleDouble
+.LSOverride
+
+# Mac system files
+._*
+
+# Testing
+coverage/
+
+# Optional: package-lock or yarn.lock (only if you don't want to lock dependencies)
+# yarn.lock
+# package-lock.json

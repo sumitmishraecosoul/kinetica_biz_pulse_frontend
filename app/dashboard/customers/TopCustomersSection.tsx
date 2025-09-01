@@ -1,6 +1,9 @@
 
 'use client';
 
+import { useEffect, useState } from 'react';
+import { dashboardAPI } from '../../services/api';
+
 interface TopCustomersSectionProps {
   selectedPeriod: string;
   selectedChannel: string;
@@ -14,95 +17,56 @@ export default function TopCustomersSection({
   selectedBusinessArea,
   onDrillDown
 }: TopCustomersSectionProps) {
-  const topCustomers = [
-    {
-      rank: 1,
-      name: 'Tesco Ireland',
-      channel: 'Grocery ROI',
-      revenue: 425000,
-      margin: 28.5,
-      growth: 15.2,
-      orders: 156,
-      avgOrderValue: 2724,
-      status: 'growing',
-      trend: [20, 25, 22, 28, 32, 35]
-    },
-    {
-      rank: 2,
-      name: 'SuperValu',
-      channel: 'Grocery ROI',
-      revenue: 285000,
-      margin: 26.1,
-      growth: 8.7,
-      orders: 124,
-      avgOrderValue: 2298,
-      status: 'stable',
-      trend: [18, 20, 19, 23, 24, 25]
-    },
-    {
-      rank: 3,
-      name: 'Tesco UK',
-      channel: 'Grocery NI/UK',
-      revenue: 245000,
-      margin: 24.8,
-      growth: 12.3,
-      orders: 98,
-      avgOrderValue: 2500,
-      status: 'growing',
-      trend: [15, 18, 20, 22, 24, 26]
-    },
-    {
-      rank: 4,
-      name: 'BWG Foods',
-      channel: 'Wholesale ROI',
-      revenue: 189000,
-      margin: 31.2,
-      growth: 5.4,
-      orders: 89,
-      avgOrderValue: 2124,
-      status: 'stable',
-      trend: [16, 17, 16, 18, 19, 20]
-    },
-    {
-      rank: 5,
-      name: 'Sainsbury\'s',
-      channel: 'Grocery NI/UK',
-      revenue: 167000,
-      margin: 23.9,
-      growth: 18.9,
-      orders: 76,
-      avgOrderValue: 2197,
-      status: 'growing',
-      trend: [12, 14, 16, 18, 20, 22]
-    }
-  ];
+  const [topCustomers, setTopCustomers] = useState<any[]>([]);
+  const [atRiskCustomers, setAtRiskCustomers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const atRiskCustomers = [
-    {
-      name: 'Henderson Group',
-      channel: 'Wholesale NI/UK',
-      revenue: 45000,
-      decline: -12.5,
-      lastOrder: '15 days ago',
-      riskLevel: 'high'
-    },
-    {
-      name: 'Nisa Retail',
-      channel: 'Wholesale NI/UK',
-      revenue: 32000,
-      decline: -8.2,
-      lastOrder: '8 days ago',
-      riskLevel: 'medium'
-    },
-    {
-      name: 'Export Partner B',
-      channel: 'International',
-      revenue: 28000,
-      decline: -15.3,
-      lastOrder: '22 days ago',
-      riskLevel: 'high'
-    }
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const params: any = {
+          period: selectedPeriod,
+          businessArea: selectedBusinessArea !== 'All' ? selectedBusinessArea : undefined,
+          channel: selectedChannel !== 'All' ? selectedChannel : undefined,
+          dimension: 'Customer',
+          metric: 'gSales',
+          limit: 10,
+        };
+        const [topRes, riskRes] = await Promise.all([
+          dashboardAPI.getTopPerformers(params),
+          dashboardAPI.getRisk({ ...params, metric: undefined })
+        ]);
+        const top = (topRes.data.data || []).map((item: any, idx: number) => ({
+          rank: idx + 1,
+          name: item.name,
+          channel: selectedChannel === 'All' ? '' : selectedChannel,
+          revenue: item.value,
+          margin: undefined as number | undefined,
+          growth: item.growth,
+          orders: undefined as number | undefined,
+          avgOrderValue: undefined as number | undefined,
+          status: item.growth > 10 ? 'growing' : item.growth < 0 ? 'declining' : 'stable',
+        }));
+        setTopCustomers(top);
+        const risks = (riskRes.data.data || []).slice(0, 3).map((r: any) => ({
+          name: r.name,
+          channel: selectedChannel === 'All' ? '' : selectedChannel,
+          revenue: r.value,
+          decline: r.trend < 0 ? Number(r.trend.toFixed(1)) : 0,
+          lastOrder: '-',
+          riskLevel: r.riskLevel,
+        }));
+        setAtRiskCustomers(risks);
+      } catch (e) {
+        setTopCustomers([]);
+        setAtRiskCustomers([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [selectedPeriod, selectedChannel, selectedBusinessArea]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IE', { 
@@ -110,7 +74,7 @@ export default function TopCustomersSection({
       currency: 'EUR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
-    }).format(amount);
+    }).format(amount || 0);
   };
 
   const getStatusColor = (status: string) => {
@@ -181,20 +145,22 @@ export default function TopCustomersSection({
                   <h4 className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors duration-200">
                     {customer.name}
                   </h4>
-                  <p className="text-sm text-gray-500">{customer.channel}</p>
+                  {customer.channel && <p className="text-sm text-gray-500">{customer.channel}</p>}
                 </div>
               </div>
               
               <div className="flex items-center space-x-6">
                 <div className="text-right">
                   <div className="font-medium text-gray-900">{formatCurrency(customer.revenue)}</div>
-                  <div className="text-sm text-gray-500">{customer.orders} orders</div>
+                  {customer.orders && <div className="text-sm text-gray-500">{customer.orders} orders</div>}
                 </div>
                 
-                <div className="text-right">
-                  <div className="font-medium text-gray-900">{customer.margin.toFixed(1)}%</div>
-                  <div className="text-sm text-gray-500">margin</div>
-                </div>
+                {typeof customer.margin === 'number' && (
+                  <div className="text-right">
+                    <div className="font-medium text-gray-900">{customer.margin.toFixed(1)}%</div>
+                    <div className="text-sm text-gray-500">margin</div>
+                  </div>
+                )}
                 
                 <div className="text-right">
                   <div className={`font-medium ${customer.growth > 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -203,9 +169,11 @@ export default function TopCustomersSection({
                   <div className="text-sm text-gray-500">growth</div>
                 </div>
                 
-                <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(customer.status)}`}>
-                  {customer.status}
-                </div>
+                {customer.status && (
+                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(customer.status)}`}>
+                    {customer.status}
+                  </div>
+                )}
                 
                 <div className="w-6 h-6 flex items-center justify-center">
                   <i className="ri-arrow-right-s-line text-gray-400 group-hover:text-gray-600 transition-colors duration-200"></i>

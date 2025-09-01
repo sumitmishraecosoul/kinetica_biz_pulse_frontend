@@ -68,9 +68,12 @@ export default function ChannelShareAnalysis({
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">Channel Share Analysis</h3>
-          <p className="text-sm text-gray-500 mt-1">Revenue distribution by channel</p>
+        <div className="flex items-center space-x-2">
+          <img src="/assets/Heart.svg" alt="Heart" className="w-5 h-5" />
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Channel Share Analysis</h3>
+            <p className="text-sm text-gray-500 mt-1">Revenue distribution by channel</p>
+          </div>
         </div>
         <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors duration-200">
           <i className="ri-more-2-line"></i>

@@ -44,6 +44,37 @@ interface PerformanceData {
 }
 
 export default function Dashboard() {
+    // Check authentication and API health on client side
+  useEffect(() => {
+    const checkAuthAndHealth = async () => {
+      if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('auth_token');
+        const refreshToken = localStorage.getItem('refresh_token');
+
+        console.log('Auth check:', { token: !!token, refreshToken: !!refreshToken });
+
+        if (!token && !refreshToken) {
+          console.log('No authentication found - redirecting to login');
+          window.location.href = '/login';
+          return;
+        }
+
+        // Check API health
+        try {
+          const healthResponse = await fetch('http://localhost:5000/health');
+          if (!healthResponse.ok) {
+            console.error('API health check failed');
+            setError('API server is not responding. Please check if the server is running.');
+          }
+        } catch (err) {
+          console.error('API health check error:', err);
+          setError('Cannot connect to API server. Please check if the server is running on port 5000.');
+        }
+      }
+    };
+
+    checkAuthAndHealth();
+  }, []);
   const [selectedPeriod, setSelectedPeriod] = useState('YTD');
   const [selectedBusinessArea, setSelectedBusinessArea] = useState('All');
   const [selectedChannel, setSelectedChannel] = useState('All');
@@ -56,33 +87,50 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch data from APIs
+  // Fetch data from APIs with debouncing
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        // Fetch all data in parallel
+        const params = {
+          period: selectedPeriod,
+          month: selectedMonth,
+          businessArea: selectedBusinessArea,
+          channel: selectedChannel,
+        };
+
+        // Add a small delay to prevent rapid successive calls
+        await new Promise(resolve => setTimeout(resolve, 100));
+
         const [businessAreasRes, channelsRes, performanceRes] = await Promise.all([
-          dashboardAPI.getBusinessAreas(),
-          dashboardAPI.getChannels(),
-          dashboardAPI.getPerformanceData()
+          dashboardAPI.getBusinessAreas(params),
+          dashboardAPI.getChannels(params),
+          dashboardAPI.getPerformanceData(params)
         ]);
 
         setBusinessAreas(businessAreasRes.data.data || []);
         setChannels(channelsRes.data.data || []);
         setPerformanceData(performanceRes.data.data || []);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error fetching dashboard data:', err);
-        setError('Failed to load dashboard data');
+        
+        // Handle rate limiting specifically
+        if (err.response?.status === 429) {
+          setError('Too many requests. Please wait a moment and try again.');
+        } else {
+          setError('Failed to load dashboard data');
+        }
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, []);
+    // Add debouncing to prevent rapid successive calls
+    const timeoutId = setTimeout(fetchData, 300);
+    return () => clearTimeout(timeoutId);
+  }, [selectedPeriod, selectedMonth, selectedBusinessArea, selectedChannel]);
 
   if (loading) {
     return (
@@ -101,8 +149,15 @@ export default function Dashboard() {
         <div className="text-center">
           <p className="text-red-600 mb-4">{error}</p>
           <button 
-            onClick={() => window.location.reload()} 
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            onClick={() => {
+              setError(null);
+              setLoading(true);
+              // Force a fresh data fetch
+              setTimeout(() => {
+                window.location.reload();
+              }, 1000);
+            }} 
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
           >
             Retry
           </button>
@@ -129,7 +184,10 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4">Business Areas</h2>
+            <div className="flex items-center space-x-2 mb-4">
+              <img src="/assets/Tag.svg" alt="Tag" className="w-5 h-5" />
+              <h2 className="text-xl font-semibold">Business Areas</h2>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               {Array.isArray(businessAreas) && businessAreas.map((area, index) => (
                 <BusinessAreaCard
@@ -143,7 +201,10 @@ export default function Dashboard() {
           </div>
 
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4">Sales Channels</h2>
+            <div className="flex items-center space-x-2 mb-4">
+              <img src="/assets/Users.svg" alt="Users" className="w-5 h-5" />
+              <h2 className="text-xl font-semibold">Sales Channels</h2>
+            </div>
             <div className="space-y-3">
               {Array.isArray(channels) && channels.map((channel, index) => (
                 <ChannelCard
@@ -158,7 +219,10 @@ export default function Dashboard() {
         </div>
 
         <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-xl font-semibold mb-4">Performance Overview</h2>
+          <div className="flex items-center space-x-2 mb-4">
+            <img src="/assets/Dollar sign.svg" alt="Dollar" className="w-5 h-5" />
+            <h2 className="text-xl font-semibold">Performance Data</h2>
+          </div>
           <DataTable
             data={performanceData}
             loading={loading}

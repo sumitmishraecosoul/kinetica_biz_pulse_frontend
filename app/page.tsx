@@ -13,6 +13,10 @@ export default function Home() {
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Analyze your sales performance across business areas, channels, and customers with comprehensive reporting and filtering capabilities.
           </p>
+          <div className="mt-6 flex items-center justify-center gap-4">
+            <Link href="/login" className="inline-flex items-center bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700">Sign in</Link>
+            <Link href="/signup" className="inline-flex items-center bg-white text-blue-600 border border-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50">Sign up</Link>
+          </div>
         </div>
 
         <div className="max-w-4xl mx-auto">

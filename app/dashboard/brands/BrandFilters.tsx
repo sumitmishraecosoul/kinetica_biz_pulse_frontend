@@ -1,5 +1,8 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { dashboardAPI } from '../../services/api';
+
 interface BrandFiltersProps {
   selectedBusinessArea: string;
   setSelectedBusinessArea: (area: string) => void;
@@ -21,15 +24,13 @@ export default function BrandFilters({
   selectedMetric,
   setSelectedMetric
 }: BrandFiltersProps) {
-  const businessAreas = ['All', 'Food', 'Household', 'Brillo', 'Kinetica'];
-  const brands = {
-    'All': ['All'],
-    'Food': ['All', 'Brand A', 'Brand B', 'Brand C'],
-    'Household': ['All', 'Brand D', 'Brand E'],
-    'Brillo': ['All', 'Brand F'],
-    'Kinetica': ['All', 'Brand G', 'Brand H']
-  };
-  const periods = ['YTD', 'MTD', 'Q1', 'Q2', 'Q3', 'Q4', 'Last 12M'];
+  const [filterOptions, setFilterOptions] = useState<any>({
+    businessAreas: ['All'],
+    brands: ['All'],
+    periods: ['YTD', 'MTD', 'Q1', 'Q2', 'Q3', 'Q4', 'Last 12M']
+  });
+  const [loading, setLoading] = useState(true);
+
   const metrics = [
     { value: 'revenue', label: 'Revenue' },
     { value: 'margin', label: 'Margin %' },
@@ -37,7 +38,55 @@ export default function BrandFilters({
     { value: 'growth', label: 'Growth %' }
   ];
 
-  const availableBrands = brands[selectedBusinessArea as keyof typeof brands] || ['All'];
+  useEffect(() => {
+    const fetchFilterOptions = async () => {
+      try {
+        setLoading(true);
+        const response = await dashboardAPI.getFilterOptions();
+        const data = response.data.data;
+        
+        setFilterOptions({
+          businessAreas: ['All', ...(data.businessAreas || [])],
+          brands: ['All', ...(data.brands || [])],
+          periods: data.periods || ['YTD', 'MTD', 'Q1', 'Q2', 'Q3', 'Q4', 'Last 12M']
+        });
+      } catch (error) {
+        console.error('Error fetching filter options:', error);
+        // Use fallback options
+        setFilterOptions({
+          businessAreas: ['All', 'Food', 'Household', 'Brillo', 'Kinetica'],
+          brands: ['All'],
+          periods: ['YTD', 'MTD', 'Q1', 'Q2', 'Q3', 'Q4', 'Last 12M']
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFilterOptions();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Advanced Filters</h2>
+          <button className="text-gray-400 hover:text-gray-600">
+            <i className="ri-settings-3-line text-lg"></i>
+          </button>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i}>
+              <div className="h-4 bg-gray-200 rounded mb-2 animate-pulse"></div>
+              <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
@@ -58,14 +107,16 @@ export default function BrandFilters({
                 setSelectedBusinessArea(e.target.value);
                 setSelectedBrand('All');
               }}
-              className="w-full p-2 pr-8 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full p-2 pr-8 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
             >
-              {businessAreas.map(area => (
+              {filterOptions.businessAreas.map((area: string) => (
                 <option key={area} value={area}>{area}</option>
               ))}
             </select>
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-              <i className="ri-arrow-down-s-line text-gray-400"></i>
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
             </div>
           </div>
         </div>
@@ -76,14 +127,16 @@ export default function BrandFilters({
             <select
               value={selectedBrand}
               onChange={(e) => setSelectedBrand(e.target.value)}
-              className="w-full p-2 pr-8 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full p-2 pr-8 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
             >
-              {availableBrands.map(brand => (
+              {filterOptions.brands.map((brand: string) => (
                 <option key={brand} value={brand}>{brand}</option>
               ))}
             </select>
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-              <i className="ri-arrow-down-s-line text-gray-400"></i>
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
             </div>
           </div>
         </div>
@@ -94,14 +147,16 @@ export default function BrandFilters({
             <select
               value={selectedPeriod}
               onChange={(e) => setSelectedPeriod(e.target.value)}
-              className="w-full p-2 pr-8 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full p-2 pr-8 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
             >
-              {periods.map(period => (
+              {filterOptions.periods.map((period: string) => (
                 <option key={period} value={period}>{period}</option>
               ))}
             </select>
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-              <i className="ri-arrow-down-s-line text-gray-400"></i>
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
             </div>
           </div>
         </div>
@@ -112,14 +167,16 @@ export default function BrandFilters({
             <select
               value={selectedMetric}
               onChange={(e) => setSelectedMetric(e.target.value)}
-              className="w-full p-2 pr-8 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full p-2 pr-8 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
             >
               {metrics.map(metric => (
                 <option key={metric.value} value={metric.value}>{metric.label}</option>
               ))}
             </select>
             <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-              <i className="ri-arrow-down-s-line text-gray-400"></i>
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
             </div>
           </div>
         </div>
@@ -127,11 +184,14 @@ export default function BrandFilters({
 
       <div className="mt-4 flex items-center justify-between">
         <div className="flex space-x-2">
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 whitespace-nowrap">
+          <button 
+            className="text-white px-4 py-2 rounded-md whitespace-nowrap hover:opacity-90 transition-opacity"
+            style={{ backgroundColor: '#0B2639' }}
+          >
             <i className="ri-search-line mr-2"></i>Apply Filters
           </button>
           <button 
-            className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 whitespace-nowrap"
+            className="bg-gray-100 text-gray-700 px-4 py-2 rounded-md border border-gray-200 hover:bg-gray-200 whitespace-nowrap transition-colors"
             onClick={() => {
               setSelectedBusinessArea('All');
               setSelectedBrand('All');
@@ -139,7 +199,7 @@ export default function BrandFilters({
               setSelectedMetric('revenue');
             }}
           >
-            <i className="ri-refresh-line mr-2"></i>Reset
+            <i className="ri-refresh-line mr-2"></i>Reset All
           </button>
         </div>
         <div className="flex items-center space-x-2">

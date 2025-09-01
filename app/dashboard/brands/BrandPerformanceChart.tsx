@@ -1,8 +1,9 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, LineChart, Line } from 'recharts';
+import { dashboardAPI } from '../../services/api';
 
 interface BrandPerformanceChartProps {
   selectedBusinessArea: string;
@@ -14,37 +15,67 @@ interface BrandPerformanceChartProps {
 
 export default function BrandPerformanceChart({ selectedBusinessArea, selectedBrand, selectedPeriod, selectedMetric, onDrillDown }: BrandPerformanceChartProps) {
   const [chartType, setChartType] = useState('area');
+  const [trendRevenue, setTrendRevenue] = useState<any[]>([]);
+  const [trendCases, setTrendCases] = useState<any[]>([]);
+  const [trendGP, setTrendGP] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const monthlyData = [
-    { month: 'Jan', revenue: 980000, margin: 28.2, units: 45200, growth: 8.1 },
-    { month: 'Feb', revenue: 1050000, margin: 29.1, units: 48300, growth: 9.4 },
-    { month: 'Mar', revenue: 1120000, margin: 27.8, units: 51200, growth: 11.2 },
-    { month: 'Apr', revenue: 1080000, margin: 28.9, units: 49800, growth: 7.8 },
-    { month: 'May', revenue: 1150000, margin: 30.2, units: 52100, growth: 12.3 },
-    { month: 'Jun', revenue: 1200000, margin: 29.5, units: 54600, growth: 10.7 },
-    { month: 'Jul', revenue: 1180000, margin: 28.7, units: 53400, growth: 9.2 },
-    { month: 'Aug', revenue: 1250000, margin: 31.1, units: 56200, growth: 13.5 },
-    { month: 'Sep', revenue: 1300000, margin: 29.8, units: 58700, growth: 11.9 },
-    { month: 'Oct', revenue: 1220000, margin: 28.4, units: 55300, growth: 8.6 },
-    { month: 'Nov', revenue: 1350000, margin: 30.5, units: 60100, growth: 14.2 },
-    { month: 'Dec', revenue: 1400000, margin: 32.1, units: 62800, growth: 16.4 }
-  ];
+  useEffect(() => {
+    const fetchTrends = async () => {
+      try {
+        setLoading(true);
+        const baseParams: any = {
+          period: selectedPeriod,
+          businessArea: selectedBusinessArea !== 'All' ? selectedBusinessArea : undefined,
+          brand: selectedBrand !== 'All' ? selectedBrand : undefined,
+        };
+        const [rev, cas, gp] = await Promise.all([
+          dashboardAPI.getTrend({ ...baseParams, metric: 'gSales' }),
+          dashboardAPI.getTrend({ ...baseParams, metric: 'Cases' }),
+          dashboardAPI.getTrend({ ...baseParams, metric: 'fGP' })
+        ]);
+        setTrendRevenue(rev.data.data || []);
+        setTrendCases(cas.data.data || []);
+        setTrendGP(gp.data.data || []);
+      } catch (e) {
+        setTrendRevenue([]);
+        setTrendCases([]);
+        setTrendGP([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTrends();
+  }, [selectedBusinessArea, selectedBrand, selectedPeriod]);
+
+  const monthlyData = useMemo(() => {
+    const months = Array.from(new Set([...(trendRevenue || []).map((d: any) => d.period)]));
+    return months.map((m) => {
+      const r = (trendRevenue || []).find((d: any) => d.period === m);
+      const c = (trendCases || []).find((d: any) => d.period === m);
+      const g = (trendGP || []).find((d: any) => d.period === m);
+      const revenue = r?.value || 0;
+      const units = c?.value || 0;
+      const gp = g?.value || 0;
+      const margin = revenue > 0 ? (gp / revenue) * 100 : 0;
+      const growth = r?.changePercent || 0;
+      return { month: m, revenue, units, margin: Number(margin.toFixed(1)), growth: Number(growth?.toFixed?.(1) || 0) };
+    });
+  }, [trendRevenue, trendCases, trendGP]);
 
   const formatValue = (value: number) => {
     if (selectedMetric === 'revenue') {
       return `€${(value / 1000).toFixed(0)}K`;
-    } else if (selectedMetric === 'margin') {
-      return `${value}%`;
+    } else if (selectedMetric === 'margin' || selectedMetric === 'growth') {
+      return `${value.toFixed(1)}%`;
     } else if (selectedMetric === 'units') {
       return `${(value / 1000).toFixed(1)}K`;
     } else {
-      return `${value}%`;
+      return `${value}`;
     }
   };
 
-  const getMetricValue = (item: any) => {
-    return item[selectedMetric];
-  };
+  const getMetricValue = (item: any) => item[selectedMetric];
 
   const renderChart = () => {
     const commonProps = {
@@ -55,27 +86,27 @@ export default function BrandPerformanceChart({ selectedBusinessArea, selectedBr
     switch (chartType) {
       case 'bar':
         return (
-          <BarChart {...commonProps}>
+           <BarChart {...commonProps}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
             <YAxis tickFormatter={formatValue} />
-            <Tooltip formatter={(value: any) => [formatValue(value), selectedMetric]} />
-            <Bar dataKey={selectedMetric} fill="#3B82F6" radius={[4, 4, 0, 0]} />
+             <Tooltip formatter={(value: any) => [formatValue(value), selectedMetric]} />
+             <Bar dataKey={selectedMetric} fill="#3B82F6" radius={[4, 4, 0, 0]} />
           </BarChart>
         );
       case 'line':
         return (
-          <LineChart {...commonProps}>
+           <LineChart {...commonProps}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
             <YAxis tickFormatter={formatValue} />
-            <Tooltip formatter={(value: any) => [formatValue(value), selectedMetric]} />
-            <Line type="monotone" dataKey={selectedMetric} stroke="#3B82F6" strokeWidth={3} dot={{ fill: '#3B82F6' }} />
+             <Tooltip formatter={(value: any) => [formatValue(value), selectedMetric]} />
+             <Line type="monotone" dataKey={selectedMetric} stroke="#3B82F6" strokeWidth={3} dot={{ fill: '#3B82F6' }} />
           </LineChart>
         );
       default:
         return (
-          <AreaChart {...commonProps}>
+           <AreaChart {...commonProps}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
             <YAxis tickFormatter={formatValue} />
@@ -138,11 +169,16 @@ export default function BrandPerformanceChart({ selectedBusinessArea, selectedBr
       <div className="grid grid-cols-4 gap-4 mt-6 pt-6 border-t">
         <div className="text-center">
           <p className="text-xs text-gray-500">Best Month</p>
-          <p className="font-semibold">December</p>
+          <p className="font-semibold">{[...monthlyData].sort((a,b) => (getMetricValue(b) - getMetricValue(a)))[0]?.month || '-'}</p>
         </div>
         <div className="text-center">
           <p className="text-xs text-gray-500">Avg Growth</p>
-          <p className="font-semibold text-green-600">+10.8%</p>
+          <p className="font-semibold text-green-600">{(() => {
+            const vals = monthlyData.map(d => d.growth).filter(v => Number.isFinite(v));
+            const avg = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
+            const sign = avg >= 0 ? '+' : '';
+            return `${sign}${avg.toFixed(1)}%`;
+          })()}</p>
         </div>
         <div className="text-center">
           <p className="text-xs text-gray-500">Peak Value</p>
@@ -150,8 +186,9 @@ export default function BrandPerformanceChart({ selectedBusinessArea, selectedBr
         </div>
         <div className="text-center">
           <p className="text-xs text-gray-500">Trend</p>
-          <p className="font-semibold text-green-600">
-            <i className="ri-trending-up-line mr-1"></i>Rising
+          <p className={`font-semibold ${((monthlyData[monthlyData.length-1]?.growth||0) >= 0) ? 'text-green-600' : 'text-red-600'}`}>
+            <i className={`ri-trending-${((monthlyData[monthlyData.length-1]?.growth||0) >= 0) ? 'up' : 'down'}-line mr-1`}></i>
+            {((monthlyData[monthlyData.length-1]?.growth||0) >= 0) ? 'Rising' : 'Falling'}
           </p>
         </div>
       </div>

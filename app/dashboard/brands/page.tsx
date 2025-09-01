@@ -53,6 +53,7 @@ export default function BrandsAnalysis() {
         <BrandOverviewCards 
           selectedBusinessArea={selectedBusinessArea}
           selectedBrand={selectedBrand}
+          selectedPeriod={selectedPeriod}
           onDrillDown={handleDrillDown}
         />
 

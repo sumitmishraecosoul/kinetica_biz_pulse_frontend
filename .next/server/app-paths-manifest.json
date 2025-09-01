@@ -1,3 +1,8 @@
 {
-  "/dashboard/customers/page": "app/dashboard/customers/page.js"
+  "/dashboard/customers/page": "app/dashboard/customers/page.js",
+  "/signup/page": "app/signup/page.js",
+  "/dashboard/brands/page": "app/dashboard/brands/page.js",
+  "/dashboard/categories/page": "app/dashboard/categories/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/_not-found/page": "app/_not-found/page.js"
 }

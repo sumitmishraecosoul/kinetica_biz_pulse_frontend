@@ -2,41 +2,114 @@
 'use client';
 
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
+import { authAPI } from '../services/api';
 
 export default function DashboardHeader() {
+  const [userEmail, setUserEmail] = useState('');
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const email = localStorage.getItem('user_email');
+      setUserEmail(email || '');
+    }
+  }, []);
+
+  const handleLogout = () => {
+    authAPI.logout();
+  };
+
+  const isActiveTab = (path: string) => {
+    console.log('Checking path:', path, 'Current pathname:', pathname);
+    if (path === '/dashboard') {
+      return pathname === '/dashboard';
+    }
+    return pathname.includes(path);
+  };
+
   return (
-    <header className="bg-white border-b border-gray-200 shadow-sm">
+    <header className="shadow-sm" style={{ backgroundColor: '#0B2639' }}>
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-8">
-            <Link href="/" className="text-2xl font-bold text-gray-900 font-['Pacifico']">
-              logo
+                        <Link href="/" className="flex items-center space-x-3">
+              <img src="/assets/ThriveLogo.svg" alt="Thrive Brands" className="h-8 w-auto" />
+              <div className="bg-green-100 rounded-lg p-2">
+                <img src="/assets/KineticaLogo.svg" alt="Kinetica Sports" className="h-12 w-auto" />
+              </div>
             </Link>
             <nav className="flex space-x-6">
-              <Link href="/dashboard" className="text-blue-600 font-medium whitespace-nowrap">
+              <Link 
+                href="/dashboard" 
+                className={`font-medium whitespace-nowrap pb-1 ${
+                  isActiveTab('/dashboard') 
+                    ? 'text-white border-b-2 border-blue-400' 
+                    : 'text-white hover:text-gray-200'
+                }`}
+              >
                 Dashboard
               </Link>
-              <Link href="/dashboard/customers" className="text-gray-600 hover:text-gray-900 whitespace-nowrap">
+              <Link 
+                href="/dashboard/customers" 
+                className={`font-medium whitespace-nowrap pb-1 ${
+                  isActiveTab('/customers') 
+                    ? 'text-white border-b-2 border-blue-400' 
+                    : 'text-white hover:text-gray-200'
+                }`}
+              >
                 Customer Analysis
               </Link>
-              <Link href="/dashboard/brands" className="text-gray-600 hover:text-gray-900 whitespace-nowrap">
+              <Link 
+                href="/dashboard/brands" 
+                className={`font-medium whitespace-nowrap pb-1 ${
+                  isActiveTab('/brands') 
+                    ? 'text-white border-b-2 border-blue-400' 
+                    : 'text-white hover:text-gray-200'
+                }`}
+              >
                 Brand Analysis
               </Link>
-              <Link href="/dashboard/categories" className="text-gray-600 hover:text-gray-900 whitespace-nowrap">
+              <Link 
+                href="/dashboard/categories" 
+                className={`font-medium whitespace-nowrap pb-1 ${
+                  isActiveTab('/categories') 
+                    ? 'text-white border-b-2 border-blue-400' 
+                    : 'text-white hover:text-gray-200'
+                }`}
+              >
                 Category Analysis
               </Link>
-              <Link href="/dashboard/reports" className="text-gray-600 hover:text-gray-900 whitespace-nowrap">
+              <Link 
+                href="/dashboard/reports" 
+                className={`font-medium whitespace-nowrap pb-1 ${
+                  isActiveTab('/reports') 
+                    ? 'text-white border-b-2 border-blue-400' 
+                    : 'text-gray-400 cursor-not-allowed'
+                }`}
+                aria-disabled={!isActiveTab('/reports')}
+              >
                 Reports
               </Link>
             </nav>
           </div>
           <div className="flex items-center space-x-4">
-            <button className="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-gray-900">
+            <button className="w-8 h-8 flex items-center justify-center text-white hover:text-gray-200">
               <i className="ri-notification-line text-lg"></i>
             </button>
-            <button className="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-gray-900">
-              <i className="ri-user-line text-lg"></i>
-            </button>
+            <div className="flex items-center space-x-3">
+              <span className="text-sm text-white">{userEmail}</span>
+              <button className="w-8 h-8 flex items-center justify-center text-white hover:text-gray-200">
+                <i className="ri-user-line text-lg"></i>
+              </button>
+              <button
+                onClick={handleLogout}
+                className="px-3 py-1 text-sm text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-md transition-colors"
+              >
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       </div>

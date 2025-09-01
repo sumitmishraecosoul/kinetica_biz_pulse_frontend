@@ -31,18 +31,33 @@ export default function ChannelCard({ channel, isSelected, onClick }: ChannelCar
     return `${sign}${value.toFixed(1)}%`;
   };
 
+  const getChannelTag = (name: string) => {
+    const tags = {
+      'Grocery ROI': 'ROI',
+      'Grocery NI/UK': 'UK',
+      'Wholesale ROI': 'ROI',
+      'Wholesale UK & NI': 'UK',
+      'International': 'Global',
+      'Online': 'Digital',
+      'Sports & Others': 'Specialty'
+    };
+    return tags[name as keyof typeof tags] || '';
+  };
+
   return (
     <div
-      className={`p-4 rounded-lg border cursor-pointer transition-all hover:shadow-sm ${
-        isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+      className={`p-4 rounded-t-lg border cursor-pointer transition-all hover:shadow-sm ${
+        isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-gray-50 hover:border-gray-300'
       }`}
       onClick={onClick}
     >
       <div className="flex items-center justify-between mb-2">
         <h3 className="font-medium text-gray-900">{channel.name}</h3>
-        <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">
-          {channel.region}
-        </span>
+        {getChannelTag(channel.name) && (
+          <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">
+            {getChannelTag(channel.name)}
+          </span>
+        )}
       </div>
       
       <div className="grid grid-cols-3 gap-4 mb-3">
@@ -63,7 +78,7 @@ export default function ChannelCard({ channel, isSelected, onClick }: ChannelCar
       </div>
       
       <div className="text-xs text-gray-500">
-        Key: {channel.customers.slice(0, 2).join(', ')}
+        Key accounts: {channel.customers.slice(0, 2).join(', ')}
         {channel.customers.length > 2 && ` +${channel.customers.length - 2} more`}
       </div>
     </div>

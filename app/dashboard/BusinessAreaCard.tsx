@@ -32,23 +32,23 @@ export default function BusinessAreaCard({ area, isSelected, onClick }: Business
 
   const getBusinessAreaColor = (name: string) => {
     const colors = {
-      'Food': 'bg-blue-500',
-      'Household': 'bg-green-500',
-      'Brillo': 'bg-yellow-500',
-      'Kinetica': 'bg-purple-500'
+      'Food': 'bg-blue-600',
+      'Household': 'bg-gray-400',
+      'Brillo & KMPL': 'bg-gray-400',
+      'Kinetica': 'bg-gray-400'
     };
-    return colors[name as keyof typeof colors] || 'bg-gray-500';
+    return colors[name as keyof typeof colors] || 'bg-gray-400';
   };
 
   return (
     <div
-      className={`p-4 rounded-lg border-2 cursor-pointer transition-all hover:shadow-md ${
-        isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-gray-50 hover:border-gray-300'
+      className={`p-4 rounded-t-lg border cursor-pointer transition-all hover:shadow-md ${
+        isSelected ? 'border-blue-400 bg-blue-50' : 'border-gray-200 bg-gray-50 hover:border-gray-300'
       }`}
       onClick={onClick}
     >
       <div className="flex items-center space-x-3 mb-3">
-        <div className={`w-4 h-4 rounded-full ${getBusinessAreaColor(area.name)}`}></div>
+        <div className={`w-3 h-3 rounded-full ${getBusinessAreaColor(area.name)}`}></div>
         <h3 className="font-semibold text-gray-900">{area.name}</h3>
       </div>
       
@@ -73,7 +73,7 @@ export default function BusinessAreaCard({ area, isSelected, onClick }: Business
         <p className="text-xs text-gray-500">{area.brands.length} brands</p>
         <div className="flex flex-wrap gap-1 mt-1">
           {area.brands.slice(0, 2).map((brand, index) => (
-            <span key={index} className="text-xs bg-gray-200 px-2 py-1 rounded">
+            <span key={index} className="text-xs bg-gray-100 px-2 py-1 rounded-md">
               {brand}
             </span>
           ))}

@@ -1,57 +1,117 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { dashboardAPI } from '../../services/api';
+
 interface MarginVarianceAnalysisProps {
   selectedBusinessArea: string;
   selectedBrand: string;
 }
 
-export default function MarginVarianceAnalysis({ selectedBusinessArea, selectedBrand }: MarginVarianceAnalysisProps) {
-  const varianceData = [
-    {
-      driver: 'Volume Impact',
-      value: +2.4,
-      description: 'Higher sales volume',
-      icon: 'ri-arrow-up-circle-fill',
-      color: 'text-green-600'
-    },
-    {
-      driver: 'Price Changes',
-      value: +1.8,
-      description: 'Price optimization',
-      icon: 'ri-arrow-up-circle-fill',
-      color: 'text-green-600'
-    },
-    {
-      driver: 'Raw Material Cost',
-      value: -1.2,
-      description: 'Commodity inflation',
-      icon: 'ri-arrow-down-circle-fill',
-      color: 'text-red-600'
-    },
-    {
-      driver: 'Manufacturing',
-      value: -0.5,
-      description: 'Efficiency losses',
-      icon: 'ri-arrow-down-circle-fill',
-      color: 'text-red-600'
-    },
-    {
-      driver: 'Logistics',
-      value: -0.3,
-      description: 'Transport costs',
-      icon: 'ri-arrow-down-circle-fill',
-      color: 'text-red-600'
-    },
-    {
-      driver: 'Promotions',
-      value: -0.8,
-      description: 'Trade spend increase',
-      icon: 'ri-arrow-down-circle-fill',
-      color: 'text-red-600'
-    }
-  ];
+interface VarianceDriver {
+  driver: string;
+  value: number;
+  description: string;
+  icon: string;
+  color: string;
+}
 
-  const totalImpact = varianceData.reduce((sum, item) => sum + item.value, 0);
+export default function MarginVarianceAnalysis({ selectedBusinessArea, selectedBrand }: MarginVarianceAnalysisProps) {
+  const [varianceData, setVarianceData] = useState<VarianceDriver[]>([]);
+  const [totalImpact, setTotalImpact] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchVarianceData = async () => {
+      try {
+        setLoading(true);
+        const params: any = {
+          businessArea: selectedBusinessArea !== 'All' ? selectedBusinessArea : undefined,
+          brand: selectedBrand !== 'All' ? selectedBrand : undefined,
+        };
+        
+        const response = await dashboardAPI.getVariance(params);
+        const data = response.data.data;
+        
+        // Convert API data to component format
+        const drivers: VarianceDriver[] = [
+          {
+            driver: 'Volume Impact',
+            value: data.volumeVariance || 0,
+            description: 'Higher sales volume',
+            icon: 'ri-arrow-up-circle-fill',
+            color: (data.volumeVariance || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+          },
+          {
+            driver: 'Price Changes',
+            value: data.priceVariance || 0,
+            description: 'Price optimization',
+            icon: 'ri-arrow-up-circle-fill',
+            color: (data.priceVariance || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+          },
+          {
+            driver: 'Cost Impact',
+            value: data.costVariance || 0,
+            description: 'Cost changes',
+            icon: 'ri-arrow-down-circle-fill',
+            color: (data.costVariance || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+          },
+          {
+            driver: 'Mix Impact',
+            value: data.mixVariance || 0,
+            description: 'Product mix changes',
+            icon: 'ri-arrow-up-circle-fill',
+            color: (data.mixVariance || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+          }
+        ];
+        
+        setVarianceData(drivers);
+        setTotalImpact(data.totalVariance || 0);
+      } catch (error) {
+        console.error('Error fetching variance data:', error);
+        // Fallback to empty data
+        setVarianceData([]);
+        setTotalImpact(0);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVarianceData();
+  }, [selectedBusinessArea, selectedBrand]);
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Margin Variance Analysis</h3>
+            <p className="text-sm text-gray-500">Period-over-period drivers</p>
+          </div>
+          <div className="text-right">
+            <div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div>
+          </div>
+        </div>
+        
+        <div className="space-y-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
+                <div>
+                  <div className="h-4 bg-gray-200 rounded w-24 mb-1 animate-pulse"></div>
+                  <div className="h-3 bg-gray-200 rounded w-32 animate-pulse"></div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="h-4 bg-gray-200 rounded w-12 animate-pulse"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">

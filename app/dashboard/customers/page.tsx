@@ -67,6 +67,7 @@ export default function CustomerAnalysis() {
           selectedPeriod={selectedPeriod}
           selectedChannel={selectedChannel}
           selectedCustomer={selectedCustomer}
+          selectedBusinessArea={selectedBusinessArea}
           onDrillDown={handleDrillDown}
         />
 
