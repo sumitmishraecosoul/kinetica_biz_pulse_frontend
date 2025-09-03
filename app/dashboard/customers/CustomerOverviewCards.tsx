@@ -12,6 +12,33 @@ interface CustomerOverviewCardsProps {
   onDrillDown: (data: any) => void;
 }
 
+interface OverviewData {
+  totalCustomers: {
+    value: number;
+    change: string;
+    changePercent: number;
+    details: any;
+  };
+  customerRevenue: {
+    value: string;
+    change: string;
+    changePercent: number;
+    details: any;
+  };
+  avgCustomerValue: {
+    value: string;
+    change: string;
+    changePercent: number;
+    details: any;
+  };
+  customerRetention: {
+    value: string;
+    change: string;
+    changePercent: number;
+    details: any;
+  };
+}
+
 export default function CustomerOverviewCards({ 
   selectedPeriod, 
   selectedChannel, 
@@ -19,7 +46,7 @@ export default function CustomerOverviewCards({
   selectedBusinessArea,
   onDrillDown 
 }: CustomerOverviewCardsProps) {
-  const [overviewData, setOverviewData] = useState<any>(null);
+  const [overviewData, setOverviewData] = useState<OverviewData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,16 +58,28 @@ export default function CustomerOverviewCards({
 
         const params = {
           period: selectedPeriod,
-          channel: selectedChannel,
-          customer: selectedCustomer,
-          businessArea: selectedBusinessArea,
+          channel: selectedChannel !== 'All' ? selectedChannel : undefined,
+          customer: selectedCustomer !== 'All' ? selectedCustomer : undefined,
+          businessArea: selectedBusinessArea !== 'All' ? selectedBusinessArea : undefined,
         };
 
         const response = await dashboardAPI.getCustomerOverview(params);
-        setOverviewData(response.data.data);
+        const data = response.data.data;
+        
+        if (!data) {
+          throw new Error('No overview data received');
+        }
+
+        // Validate the data structure
+        if (!data.totalCustomers || !data.customerRevenue || !data.avgCustomerValue || !data.customerRetention) {
+          throw new Error('Invalid overview data structure');
+        }
+
+        setOverviewData(data);
       } catch (err: any) {
         console.error('Error fetching customer overview:', err);
-        setError('Failed to load customer overview data');
+        setError(err.message || 'Failed to load customer overview data');
+        setOverviewData(null);
       } finally {
         setLoading(false);
       }
@@ -67,7 +106,19 @@ export default function CustomerOverviewCards({
   if (error || !overviewData) {
     return (
       <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <p className="text-red-600 text-center">{error || 'No data available'}</p>
+        <div className="text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i className="ri-error-warning-line text-2xl text-red-600"></i>
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Unable to Load Data</h3>
+          <p className="text-sm text-gray-500 mb-4">{error || 'No customer overview data available'}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     );
   }

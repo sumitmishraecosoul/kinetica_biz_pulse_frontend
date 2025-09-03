@@ -1,6 +1,9 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
+import { dashboardAPI } from '../../services/api';
+
 interface CategoryPerformanceMatrixProps {
   selectedPeriod: string;
   selectedBusinessArea: string;
@@ -14,74 +17,49 @@ export default function CategoryPerformanceMatrix({
   selectedChannel,
   onDrillDown
 }: CategoryPerformanceMatrixProps) {
-  const categoryData = [
-    {
-      category: 'Snacks',
-      businessArea: 'Food',
-      revenue: 1125000,
-      margin: 28.5,
-      growth: 12.3,
-      marketShare: 34.2,
-      performance: 'high',
-      trend: 'up',
-      subCategories: 8
-    },
-    {
-      category: 'Beverages',
-      businessArea: 'Food',
-      revenue: 895000,
-      margin: 24.1,
-      growth: 8.7,
-      marketShare: 27.1,
-      performance: 'medium',
-      trend: 'stable',
-      subCategories: 6
-    },
-    {
-      category: 'Cleaning',
-      businessArea: 'Household',
-      revenue: 645000,
-      margin: 31.8,
-      growth: 15.2,
-      marketShare: 19.6,
-      performance: 'high',
-      trend: 'up',
-      subCategories: 5
-    },
-    {
-      category: 'Kitchen',
-      businessArea: 'Brillo',
-      revenue: 425000,
-      margin: 35.4,
-      growth: 5.8,
-      marketShare: 12.9,
-      performance: 'medium',
-      trend: 'stable',
-      subCategories: 4
-    },
-    {
-      category: 'Sports Nutrition',
-      businessArea: 'Kinetica',
-      revenue: 385000,
-      margin: 42.1,
-      growth: 22.5,
-      marketShare: 11.7,
-      performance: 'high',
-      trend: 'up',
-      subCategories: 7
-    },
-    {
-      category: 'Personal Care',
-      businessArea: 'Household',
-      revenue: 245000,
-      margin: 29.3,
-      growth: -2.1,
-      marketShare: 7.4,
-      performance: 'low',
-      trend: 'down',
-      subCategories: 3
-    }
-  ];
+  const [categoryData, setCategoryData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCategoryData = async () => {
+      try {
+        setLoading(true);
+        const params = {
+          period: selectedPeriod,
+          businessArea: selectedBusinessArea !== 'All' ? selectedBusinessArea : undefined,
+          channel: selectedChannel !== 'All' ? selectedChannel : undefined,
+        };
+
+        const response = await dashboardAPI.getCategories(params);
+        const categories = response.data.data || [];
+        
+        // Calculate total revenue for market share
+        const totalRevenue = categories.reduce((sum: number, cat: any) => sum + (cat.revenue || 0), 0);
+        
+        // Map and enhance category data
+        const enhancedData = categories.map((cat: any) => ({
+          category: cat.category || 'Unknown',
+          businessArea: cat.businessArea || 'Unknown',
+          revenue: cat.revenue || 0,
+          margin: cat.margin || 0,
+          growth: cat.growth || 0,
+          marketShare: totalRevenue > 0 ? ((cat.revenue || 0) / totalRevenue) * 100 : 0,
+          performance: cat.performance || (cat.growth > 10 ? 'high' : cat.growth < 0 ? 'low' : 'medium'),
+          trend: cat.growth > 5 ? 'up' : cat.growth < -5 ? 'down' : 'stable',
+          subCategories: cat.subCategories || 0
+        })).sort((a: any, b: any) => b.revenue - a.revenue);
+
+        setCategoryData(enhancedData);
+      } catch (error) {
+        console.error('Error fetching category data:', error);
+        setCategoryData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategoryData();
+  }, [selectedPeriod, selectedBusinessArea, selectedChannel]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IE', { 
@@ -159,7 +137,45 @@ export default function CategoryPerformanceMatrix({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {categoryData.map((category, index) => (
+            {loading ? (
+              Array.from({ length: 5 }).map((_, index) => (
+                <tr key={index} className="animate-pulse">
+                  <td className="py-4 px-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-3 h-3 bg-gray-200 rounded-full"></div>
+                      <div>
+                        <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+                        <div className="h-3 bg-gray-200 rounded w-16"></div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-4 px-4 text-right">
+                    <div className="h-4 bg-gray-200 rounded w-16 ml-auto mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-12 ml-auto"></div>
+                  </td>
+                  <td className="py-4 px-4 text-right">
+                    <div className="h-4 bg-gray-200 rounded w-12 ml-auto mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-16 ml-auto"></div>
+                  </td>
+                  <td className="py-4 px-4 text-right">
+                    <div className="h-4 bg-gray-200 rounded w-12 ml-auto"></div>
+                  </td>
+                  <td className="py-4 px-4 text-right">
+                    <div className="h-4 bg-gray-200 rounded w-12 ml-auto"></div>
+                  </td>
+                  <td className="py-4 px-4 text-center">
+                    <div className="h-6 bg-gray-200 rounded w-16 mx-auto"></div>
+                  </td>
+                </tr>
+              ))
+            ) : categoryData.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="py-8 px-4 text-center text-gray-500">
+                  No category data available
+                </td>
+              </tr>
+            ) : (
+              categoryData.map((category, index) => (
               <tr
                 key={index}
                 onClick={() => handleCategoryClick(category)}
@@ -207,7 +223,8 @@ export default function CategoryPerformanceMatrix({
                   </span>
                 </td>
               </tr>
-            ))}
+              ))
+            )}
           </tbody>
         </table>
       </div>

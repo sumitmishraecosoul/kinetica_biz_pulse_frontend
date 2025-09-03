@@ -2,7 +2,8 @@
 'use client';
 
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, LineChart, Line } from 'recharts';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { dashboardAPI } from '../../services/api';
 
 interface CustomerPerformanceChartProps {
   selectedPeriod: string;
@@ -22,21 +23,52 @@ export default function CustomerPerformanceChart({
   onDrillDown
 }: CustomerPerformanceChartProps) {
   const [chartType, setChartType] = useState('area');
+  const [performanceData, setPerformanceData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const performanceData = [
-    { month: 'Jan', revenue: 180000, margin: 22.5, units: 8500, customers: 42 },
-    { month: 'Feb', revenue: 195000, margin: 24.1, units: 9200, customers: 45 },
-    { month: 'Mar', revenue: 210000, margin: 23.8, units: 9800, customers: 48 },
-    { month: 'Apr', revenue: 225000, margin: 25.2, units: 10500, customers: 52 },
-    { month: 'May', revenue: 240000, margin: 26.1, units: 11200, customers: 55 },
-    { month: 'Jun', revenue: 235000, margin: 25.8, units: 10900, customers: 58 },
-    { month: 'Jul', revenue: 250000, margin: 27.2, units: 11800, customers: 61 },
-    { month: 'Aug', revenue: 265000, margin: 28.1, units: 12400, customers: 64 },
-    { month: 'Sep', revenue: 280000, margin: 27.9, units: 13100, customers: 67 },
-    { month: 'Oct', revenue: 295000, margin: 29.3, units: 13800, customers: 70 },
-    { month: 'Nov', revenue: 310000, margin: 30.1, units: 14500, customers: 73 },
-    { month: 'Dec', revenue: 325000, margin: 31.2, units: 15200, customers: 76 }
-  ];
+  useEffect(() => {
+    const fetchPerformanceData = async () => {
+      try {
+        setLoading(true);
+        const params = {
+          period: selectedPeriod,
+          channel: selectedChannel !== 'All' ? selectedChannel : undefined,
+          customer: selectedCustomer !== 'All' ? selectedCustomer : undefined,
+        };
+
+        // Fetch trend data for different metrics
+        const [revenueData, marginData, unitsData, customersData] = await Promise.all([
+          dashboardAPI.getTrend({ ...params, metric: 'gSales' }),
+          dashboardAPI.getTrend({ ...params, metric: 'margin' }),
+          dashboardAPI.getTrend({ ...params, metric: 'Cases' }),
+          dashboardAPI.getTrend({ ...params, metric: 'customers' })
+        ]);
+
+        const revenue = revenueData.data.data || [];
+        const margin = marginData.data.data || [];
+        const units = unitsData.data.data || [];
+        const customers = customersData.data.data || [];
+
+        // Merge all trend data by month
+        const mergedData = revenue.map((item: any, index: number) => ({
+          month: item.period?.substring(0, 3) || `Month ${index + 1}`,
+          revenue: item.value || 0,
+          margin: margin[index]?.value || 0,
+          units: units[index]?.value || 0,
+          customers: customers[index]?.value || 0
+        }));
+
+        setPerformanceData(mergedData);
+      } catch (error) {
+        console.error('Error fetching performance data:', error);
+        setPerformanceData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPerformanceData();
+  }, [selectedPeriod, selectedChannel, selectedCustomer]);
 
   const metrics = [
     { value: 'revenue', label: 'Revenue', color: '#3B82F6' },
@@ -207,9 +239,22 @@ export default function CustomerPerformanceChart({
       </div>
 
       <div className="h-80">
-        <ResponsiveContainer width="100%" height="100%">
-          {renderChart()}
-        </ResponsiveContainer>
+        {loading ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+              <p className="text-sm text-gray-500">Loading performance data...</p>
+            </div>
+          </div>
+        ) : performanceData.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-sm text-gray-500">No performance data available</p>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            {renderChart()}
+          </ResponsiveContainer>
+        )}
       </div>
 
       <div className="mt-4 pt-4 border-t border-gray-200">

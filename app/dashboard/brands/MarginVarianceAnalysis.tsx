@@ -21,6 +21,47 @@ export default function MarginVarianceAnalysis({ selectedBusinessArea, selectedB
   const [totalImpact, setTotalImpact] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  // Helper function to validate and format percentage values
+  const validateAndFormatPercentage = (value: number): number => {
+    // Clamp values to realistic business ranges (-50% to +50%)
+    const clamped = Math.max(-50, Math.min(50, value));
+    // Round to 1 decimal place
+    return Math.round(clamped * 10) / 10;
+  };
+
+  // Helper function to get appropriate icon and description based on value
+  const getDriverIconAndDescription = (driver: string, value: number) => {
+    const isPositive = value >= 0;
+    
+    switch (driver) {
+      case 'Volume Impact':
+        return {
+          icon: isPositive ? 'ri-arrow-up-circle-fill' : 'ri-arrow-down-circle-fill',
+          description: isPositive ? 'Higher sales volume' : 'Lower sales volume'
+        };
+      case 'Price Changes':
+        return {
+          icon: isPositive ? 'ri-arrow-up-circle-fill' : 'ri-arrow-down-circle-fill',
+          description: isPositive ? 'Price optimization' : 'Price pressure'
+        };
+      case 'Cost Impact':
+        return {
+          icon: isPositive ? 'ri-arrow-down-circle-fill' : 'ri-arrow-up-circle-fill',
+          description: isPositive ? 'Cost reduction' : 'Cost increases'
+        };
+      case 'Mix Impact':
+        return {
+          icon: isPositive ? 'ri-arrow-up-circle-fill' : 'ri-arrow-down-circle-fill',
+          description: isPositive ? 'Favorable product mix' : 'Unfavorable product mix'
+        };
+      default:
+        return {
+          icon: isPositive ? 'ri-arrow-up-circle-fill' : 'ri-arrow-down-circle-fill',
+          description: 'Impact on margin'
+        };
+    }
+  };
+
   useEffect(() => {
     const fetchVarianceData = async () => {
       try {
@@ -33,40 +74,49 @@ export default function MarginVarianceAnalysis({ selectedBusinessArea, selectedB
         const response = await dashboardAPI.getVariance(params);
         const data = response.data.data;
         
-        // Convert API data to component format
+        // Validate and format the variance data
+        const validatedData = {
+          volumeVariance: validateAndFormatPercentage(data.volumeVariance || 0),
+          priceVariance: validateAndFormatPercentage(data.priceVariance || 0),
+          costVariance: validateAndFormatPercentage(data.costVariance || 0),
+          mixVariance: validateAndFormatPercentage(data.mixVariance || 0),
+          totalVariance: validateAndFormatPercentage(data.totalVariance || 0)
+        };
+        
+        // Convert API data to component format with proper validation
         const drivers: VarianceDriver[] = [
           {
             driver: 'Volume Impact',
-            value: data.volumeVariance || 0,
-            description: 'Higher sales volume',
-            icon: 'ri-arrow-up-circle-fill',
-            color: (data.volumeVariance || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+            value: validatedData.volumeVariance,
+            description: getDriverIconAndDescription('Volume Impact', validatedData.volumeVariance).description,
+            icon: getDriverIconAndDescription('Volume Impact', validatedData.volumeVariance).icon,
+            color: validatedData.volumeVariance >= 0 ? 'text-green-600' : 'text-red-600'
           },
           {
             driver: 'Price Changes',
-            value: data.priceVariance || 0,
-            description: 'Price optimization',
-            icon: 'ri-arrow-up-circle-fill',
-            color: (data.priceVariance || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+            value: validatedData.priceVariance,
+            description: getDriverIconAndDescription('Price Changes', validatedData.priceVariance).description,
+            icon: getDriverIconAndDescription('Price Changes', validatedData.priceVariance).icon,
+            color: validatedData.priceVariance >= 0 ? 'text-green-600' : 'text-red-600'
           },
           {
             driver: 'Cost Impact',
-            value: data.costVariance || 0,
-            description: 'Cost changes',
-            icon: 'ri-arrow-down-circle-fill',
-            color: (data.costVariance || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+            value: validatedData.costVariance,
+            description: getDriverIconAndDescription('Cost Impact', validatedData.costVariance).description,
+            icon: getDriverIconAndDescription('Cost Impact', validatedData.costVariance).icon,
+            color: validatedData.costVariance >= 0 ? 'text-green-600' : 'text-red-600'
           },
           {
             driver: 'Mix Impact',
-            value: data.mixVariance || 0,
-            description: 'Product mix changes',
-            icon: 'ri-arrow-up-circle-fill',
-            color: (data.mixVariance || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+            value: validatedData.mixVariance,
+            description: getDriverIconAndDescription('Mix Impact', validatedData.mixVariance).description,
+            icon: getDriverIconAndDescription('Mix Impact', validatedData.mixVariance).icon,
+            color: validatedData.mixVariance >= 0 ? 'text-green-600' : 'text-red-600'
           }
         ];
         
         setVarianceData(drivers);
-        setTotalImpact(data.totalVariance || 0);
+        setTotalImpact(validatedData.totalVariance);
       } catch (error) {
         console.error('Error fetching variance data:', error);
         // Fallback to empty data

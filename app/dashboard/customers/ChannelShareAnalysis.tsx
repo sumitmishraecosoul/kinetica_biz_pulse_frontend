@@ -1,7 +1,9 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { dashboardAPI } from '../../services/api';
 
 interface ChannelShareAnalysisProps {
   selectedPeriod: string;
@@ -9,20 +11,67 @@ interface ChannelShareAnalysisProps {
   onDrillDown: (data: any) => void;
 }
 
+interface ChannelData {
+  channel: string;
+  revenue: number;
+  margin: number;
+  growth: number;
+  marketShare: number;
+  customerCount: number;
+  customers: string[];
+  performance: string;
+}
+
 export default function ChannelShareAnalysis({
   selectedPeriod,
   selectedBusinessArea,
   onDrillDown
 }: ChannelShareAnalysisProps) {
-  const channelData = [
-    { name: 'Grocery ROI', value: 35.2, revenue: 845000, customers: 28, color: '#3B82F6' },
-    { name: 'Grocery NI/UK', value: 28.5, revenue: 684000, customers: 24, color: '#10B981' },
-    { name: 'Wholesale ROI', value: 15.8, revenue: 379000, customers: 18, color: '#F59E0B' },
-    { name: 'Wholesale NI/UK', value: 12.3, revenue: 295000, customers: 15, color: '#8B5CF6' },
-    { name: 'International', value: 4.2, revenue: 101000, customers: 8, color: '#EF4444' },
-    { name: 'Online', value: 2.8, revenue: 67000, customers: 12, color: '#06B6D4' },
-    { name: 'Sports & Others', value: 1.2, revenue: 29000, customers: 5, color: '#84CC16' }
-  ];
+  const [channelData, setChannelData] = useState<ChannelData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchChannelData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const params = {
+          period: selectedPeriod,
+          businessArea: selectedBusinessArea !== 'All' ? selectedBusinessArea : undefined,
+        };
+
+        const response = await dashboardAPI.getCustomerChannels(params);
+        const channels = response.data.data || [];
+        
+        // Calculate total revenue for market share validation
+        const totalRevenue = channels.reduce((sum: number, channel: any) => sum + (channel.revenue || 0), 0);
+        
+        // Validate and enhance channel data
+        const enhancedData = channels.map((channel: any) => ({
+          channel: channel.channel || 'Unknown',
+          revenue: channel.revenue || 0,
+          margin: channel.margin || 0,
+          growth: channel.growth || 0,
+          marketShare: totalRevenue > 0 ? ((channel.revenue || 0) / totalRevenue) * 100 : 0,
+          customerCount: channel.customerCount || 0,
+          customers: channel.customers || [],
+          performance: channel.performance || 'medium'
+        })).sort((a: any, b: any) => b.revenue - a.revenue);
+
+        setChannelData(enhancedData);
+      } catch (error) {
+        console.error('Error fetching channel data:', error);
+        setError('Failed to load channel data');
+        setChannelData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchChannelData();
+  }, [selectedPeriod, selectedBusinessArea]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IE', { 
@@ -33,16 +82,21 @@ export default function ChannelShareAnalysis({
     }).format(amount);
   };
 
-  const handleChannelClick = (channel: any) => {
+  const getChannelColor = (index: number) => {
+    const colors = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#06B6D4', '#84CC16'];
+    return colors[index % colors.length];
+  };
+
+  const handleChannelClick = (channel: ChannelData) => {
     onDrillDown({
       type: 'channel-share',
-      title: `${channel.name} Analysis`,
+      title: `${channel.channel} Analysis`,
       data: {
-        channel: channel.name,
-        marketShare: channel.value,
+        channel: channel.channel,
+        marketShare: channel.marketShare,
         revenue: channel.revenue,
-        customerCount: channel.customers,
-        averageCustomerValue: channel.revenue / channel.customers,
+        customerCount: channel.customerCount,
+        averageCustomerValue: channel.customerCount > 0 ? channel.revenue / channel.customerCount : 0,
         period: selectedPeriod
       }
     });
@@ -53,17 +107,61 @@ export default function ChannelShareAnalysis({
       const data = payload[0].payload;
       return (
         <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg">
-          <h4 className="font-medium text-gray-900 mb-2">{data.name}</h4>
+          <h4 className="font-medium text-gray-900 mb-2">{data.channel}</h4>
           <div className="space-y-1 text-sm">
-            <p className="text-gray-600">Share: <span className="font-medium">{data.value}%</span></p>
+            <p className="text-gray-600">Share: <span className="font-medium">{data.marketShare.toFixed(1)}%</span></p>
             <p className="text-gray-600">Revenue: <span className="font-medium">{formatCurrency(data.revenue)}</span></p>
-            <p className="text-gray-600">Customers: <span className="font-medium">{data.customers}</span></p>
+            <p className="text-gray-600">Customers: <span className="font-medium">{data.customerCount}</span></p>
+            <p className="text-gray-600">Growth: <span className={`font-medium ${data.growth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {data.growth >= 0 ? '+' : ''}{data.growth.toFixed(1)}%
+            </span></p>
           </div>
         </div>
       );
     }
     return null;
   };
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="flex items-center space-x-2 mb-6">
+          <img src="/assets/Heart.svg" alt="Heart" className="w-5 h-5" />
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Channel Share Analysis</h3>
+            <p className="text-sm text-gray-500 mt-1">Revenue distribution by channel</p>
+          </div>
+        </div>
+        <div className="h-64 mb-6 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+            <p className="text-sm text-gray-500">Loading channel data...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || channelData.length === 0) {
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="flex items-center space-x-2 mb-6">
+          <img src="/assets/Heart.svg" alt="Heart" className="w-5 h-5" />
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Channel Share Analysis</h3>
+            <p className="text-sm text-gray-500 mt-1">Revenue distribution by channel</p>
+          </div>
+        </div>
+        <div className="h-64 mb-6 flex items-center justify-center">
+          <p className="text-sm text-red-500">{error || 'No channel data available'}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Calculate totals for summary
+  const totalRevenue = channelData.reduce((sum, channel) => sum + channel.revenue, 0);
+  const totalCustomers = channelData.reduce((sum, channel) => sum + channel.customerCount, 0);
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6">
@@ -90,12 +188,12 @@ export default function ChannelShareAnalysis({
               outerRadius={80}
               innerRadius={40}
               paddingAngle={2}
-              dataKey="value"
+              dataKey="marketShare"
             >
               {channelData.map((entry, index) => (
                 <Cell 
                   key={`cell-${index}`} 
-                  fill={entry.color}
+                  fill={getChannelColor(index)}
                   className="cursor-pointer hover:opacity-80 transition-opacity duration-200"
                   onClick={() => handleChannelClick(entry)}
                 />
@@ -116,15 +214,15 @@ export default function ChannelShareAnalysis({
             <div className="flex items-center space-x-3">
               <div
                 className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: channel.color }}
+                style={{ backgroundColor: getChannelColor(index) }}
               ></div>
               <span className="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors duration-200">
-                {channel.name}
+                {channel.channel}
               </span>
             </div>
             <div className="text-right">
-              <div className="text-sm font-medium text-gray-900">{channel.value}%</div>
-              <div className="text-xs text-gray-500">{channel.customers} customers</div>
+              <div className="text-sm font-medium text-gray-900">{channel.marketShare.toFixed(1)}%</div>
+              <div className="text-xs text-gray-500">{channel.customerCount} customers</div>
             </div>
           </div>
         ))}
@@ -133,11 +231,11 @@ export default function ChannelShareAnalysis({
       <div className="mt-6 pt-4 border-t border-gray-200">
         <div className="grid grid-cols-2 gap-4 text-center">
           <div>
-            <div className="text-lg font-bold text-gray-900">€2.4M</div>
+            <div className="text-lg font-bold text-gray-900">{formatCurrency(totalRevenue)}</div>
             <div className="text-xs text-gray-500">Total Revenue</div>
           </div>
           <div>
-            <div className="text-lg font-bold text-gray-900">110</div>
+            <div className="text-lg font-bold text-gray-900">{totalCustomers}</div>
             <div className="text-xs text-gray-500">Total Customers</div>
           </div>
         </div>

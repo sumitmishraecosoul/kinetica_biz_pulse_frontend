@@ -1,6 +1,9 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
+import { dashboardAPI } from '../../services/api';
+
 interface CategoryOverviewCardsProps {
   selectedPeriod: string;
   selectedBusinessArea: string;
@@ -14,64 +17,101 @@ export default function CategoryOverviewCards({
   selectedCategory,
   onDrillDown 
 }: CategoryOverviewCardsProps) {
-  const overviewData = [
-    {
-      title: 'Total Categories',
-      value: '47',
-      change: '+3',
-      changePercent: 6.8,
-      icon: 'ri-folder-line',
-      color: 'blue',
-      details: {
-        active: 47,
-        inactive: 8,
-        new: 3,
-        topPerforming: 12
+  const [overviewData, setOverviewData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchOverviewData = async () => {
+      try {
+        setLoading(true);
+        const params = {
+          period: selectedPeriod,
+          businessArea: selectedBusinessArea !== 'All' ? selectedBusinessArea : undefined,
+          category: selectedCategory !== 'All' ? selectedCategory : undefined,
+        };
+
+        const [categoriesData, overviewData] = await Promise.all([
+          dashboardAPI.getCategories(params),
+          dashboardAPI.getOverview(params)
+        ]);
+
+        const categories = categoriesData.data.data || [];
+        const overview = overviewData.data.data.overview || overviewData.data.data;
+        
+        const totalCategories = categories.length;
+        const totalRevenue = overview.totalRevenue || 0;
+        const activeCategories = categories.filter((c: any) => c.revenue > 0).length;
+        const topCategory = categories.reduce((max: any, cat: any) => 
+          cat.revenue > (max?.revenue || 0) ? cat : max, null);
+
+        setOverviewData([
+          {
+            title: 'Total Categories',
+            value: totalCategories.toString(),
+            change: '+3',
+            changePercent: 6.8,
+            icon: 'ri-folder-line',
+            color: 'blue',
+            details: {
+              active: activeCategories,
+              inactive: totalCategories - activeCategories,
+              new: 3,
+              topPerforming: Math.floor(totalCategories * 0.25)
+            }
+          },
+          {
+            title: 'Category Revenue',
+            value: totalRevenue >= 1000000 ? `€${(totalRevenue / 1000000).toFixed(1)}M` : `€${(totalRevenue / 1000).toFixed(0)}K`,
+            change: '+€485K',
+            changePercent: 17.8,
+            icon: 'ri-pie-chart-line',
+            color: 'green',
+            details: {
+              average: `€${totalCategories > 0 ? (totalRevenue / totalCategories / 1000).toFixed(0) : 0}K`,
+              median: '€45,200',
+              top5: `€${(totalRevenue * 0.65 / 1000000).toFixed(1)}M`,
+              growth: '17.8%'
+            }
+          },
+          {
+            title: 'Top Category Share',
+            value: topCategory ? `${((topCategory.revenue / totalRevenue) * 100).toFixed(1)}%` : '0%',
+            change: '+2.8%',
+            changePercent: 8.9,
+            icon: 'ri-trophy-line',
+            color: 'yellow',
+            details: {
+              topCategory: topCategory?.category || 'N/A',
+              revenue: topCategory ? `€${(topCategory.revenue / 1000000).toFixed(1)}M` : '€0',
+              share: topCategory ? `${((topCategory.revenue / totalRevenue) * 100).toFixed(1)}%` : '0%',
+              growth: topCategory ? `${topCategory.growth?.toFixed(1) || 0}%` : '0%'
+            }
+          },
+          {
+            title: 'Category Diversity',
+            value: '0.76',
+            change: '+0.05',
+            changePercent: 7.0,
+            icon: 'ri-gallery-line',
+            color: 'purple',
+            details: {
+              herfindahl: 0.76,
+              evenness: 0.82,
+              concentration: 'Medium',
+              balance: 'Good'
+            }
+          }
+        ]);
+      } catch (error) {
+        console.error('Error fetching category overview data:', error);
+        setOverviewData([]);
+      } finally {
+        setLoading(false);
       }
-    },
-    {
-      title: 'Category Revenue',
-      value: '€3.2M',
-      change: '+€485K',
-      changePercent: 17.8,
-      icon: 'ri-pie-chart-line',
-      color: 'green',
-      details: {
-        average: '€68,085',
-        median: '€45,200',
-        top5: '€2.1M',
-        growth: '17.8%'
-      }
-    },
-    {
-      title: 'Top Category Share',
-      value: '34.2%',
-      change: '+2.8%',
-      changePercent: 8.9,
-      icon: 'ri-trophy-line',
-      color: 'yellow',
-      details: {
-        topCategory: 'Snacks',
-        revenue: '€1.1M',
-        share: '34.2%',
-        growth: '12.5%'
-      }
-    },
-    {
-      title: 'Category Diversity',
-      value: '0.76',
-      change: '+0.05',
-      changePercent: 7.0,
-      icon: 'ri-gallery-line',
-      color: 'purple',
-      details: {
-        herfindahl: 0.76,
-        evenness: 0.82,
-        concentration: 'Medium',
-        balance: 'Good'
-      }
-    }
-  ];
+    };
+
+    fetchOverviewData();
+  }, [selectedPeriod, selectedBusinessArea, selectedCategory]);
 
   const getColorClasses = (color: string) => {
     const colors = {
@@ -92,6 +132,21 @@ export default function CategoryOverviewCards({
       businessArea: selectedBusinessArea
     });
   };
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="bg-white rounded-xl border border-gray-200 p-6 animate-pulse">
+            <div className="h-12 w-12 bg-gray-200 rounded-lg mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded mb-2"></div>
+            <div className="h-8 bg-gray-200 rounded mb-2"></div>
+            <div className="h-3 bg-gray-200 rounded"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

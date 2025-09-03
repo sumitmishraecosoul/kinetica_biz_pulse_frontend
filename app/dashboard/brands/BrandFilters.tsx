@@ -30,6 +30,7 @@ export default function BrandFilters({
     periods: ['YTD', 'MTD', 'Q1', 'Q2', 'Q3', 'Q4', 'Last 12M']
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const metrics = [
     { value: 'revenue', label: 'Revenue' },
@@ -42,8 +43,13 @@ export default function BrandFilters({
     const fetchFilterOptions = async () => {
       try {
         setLoading(true);
+        setError(null);
         const response = await dashboardAPI.getFilterOptions();
         const data = response.data.data;
+        
+        if (!data || !data.brands || data.brands.length === 0) {
+          throw new Error('No brand data available from API');
+        }
         
         setFilterOptions({
           businessAreas: ['All', ...(data.businessAreas || [])],
@@ -52,12 +58,8 @@ export default function BrandFilters({
         });
       } catch (error) {
         console.error('Error fetching filter options:', error);
-        // Use fallback options
-        setFilterOptions({
-          businessAreas: ['All', 'Food', 'Household', 'Brillo', 'Kinetica'],
-          brands: ['All'],
-          periods: ['YTD', 'MTD', 'Q1', 'Q2', 'Q3', 'Q4', 'Last 12M']
-        });
+        setError('Failed to load filter options. Please refresh the page.');
+        // Don't set fallback data - let user know there's an issue
       } finally {
         setLoading(false);
       }
@@ -83,6 +85,32 @@ export default function BrandFilters({
               <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
             </div>
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Advanced Filters</h2>
+          <button className="text-gray-400 hover:text-gray-600">
+            <i className="ri-settings-3-line text-lg"></i>
+          </button>
+        </div>
+        
+        <div className="text-center py-8">
+          <div className="text-red-500 mb-2">
+            <i className="ri-error-warning-line text-2xl"></i>
+          </div>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+          >
+            Refresh Page
+          </button>
         </div>
       </div>
     );
