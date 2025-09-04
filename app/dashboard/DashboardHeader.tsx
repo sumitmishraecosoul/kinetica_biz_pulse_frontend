@@ -33,18 +33,18 @@ export default function DashboardHeader() {
     <header className="shadow-sm" style={{ backgroundColor: '#0B2639' }}>
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-8">
-                        <Link href="/" className="flex items-center space-x-3">
-              <img src="/assets/ThriveLogo.svg" alt="Thrive Brands" className="h-8 w-auto" />
-              <div className="bg-green-100 rounded-lg p-2">
-                <img src="/assets/KineticaLogo.svg" alt="Kinetica Sports" className="h-12 w-auto" />
+          <div className="flex items-center space-x-20">
+            <Link href="/" className="flex items-center space-x-8">
+              <img src="/assets/ThriveLogo.svg" alt="Thrive Brands" className="h-14 w-auto" />
+              <div className="bg-green-100 rounded-lg p-2 w-48">
+                <img src="/assets/KineticaLogo.svg" alt="Kinetica Sports" className="h-12 w-full" />
               </div>
             </Link>
-            <nav className="flex space-x-6">
+            <nav className="flex space-x-6 ml-12">
               <Link 
                 href="/dashboard" 
                 className={`font-medium whitespace-nowrap pb-1 ${
-                  isActiveTab('/dashboard') 
+                  isActiveTab('/dashboard') && pathname === '/dashboard'
                     ? 'text-white border-b-2 border-blue-400' 
                     : 'text-white hover:text-gray-200'
                 }`}
@@ -52,9 +52,19 @@ export default function DashboardHeader() {
                 Dashboard
               </Link>
               <Link 
+                href="/dashboard/business-analysis" 
+                className={`font-medium whitespace-nowrap pb-1 ${
+                  pathname === '/dashboard/business-analysis'
+                    ? 'text-white border-b-2 border-blue-400' 
+                    : 'text-white hover:text-gray-200'
+                }`}
+              >
+                Business Analysis
+              </Link>
+              <Link 
                 href="/dashboard/customers" 
                 className={`font-medium whitespace-nowrap pb-1 ${
-                  isActiveTab('/customers') 
+                  pathname === '/dashboard/customers'
                     ? 'text-white border-b-2 border-blue-400' 
                     : 'text-white hover:text-gray-200'
                 }`}
@@ -64,7 +74,7 @@ export default function DashboardHeader() {
               <Link 
                 href="/dashboard/brands" 
                 className={`font-medium whitespace-nowrap pb-1 ${
-                  isActiveTab('/brands') 
+                  pathname === '/dashboard/brands'
                     ? 'text-white border-b-2 border-blue-400' 
                     : 'text-white hover:text-gray-200'
                 }`}
@@ -74,7 +84,7 @@ export default function DashboardHeader() {
               <Link 
                 href="/dashboard/categories" 
                 className={`font-medium whitespace-nowrap pb-1 ${
-                  isActiveTab('/categories') 
+                  pathname === '/dashboard/categories'
                     ? 'text-white border-b-2 border-blue-400' 
                     : 'text-white hover:text-gray-200'
                 }`}
@@ -84,11 +94,10 @@ export default function DashboardHeader() {
               <Link 
                 href="/dashboard/reports" 
                 className={`font-medium whitespace-nowrap pb-1 ${
-                  isActiveTab('/reports') 
-                    ? 'text-white border-b-2 border-blue-400' 
-                    : 'text-gray-400 cursor-not-allowed'
+                  pathname === '/dashboard/reports'
+                    ? 'text-white border-b-2 border-blue-200' 
+                    : 'text-white hover:text-gray-200'
                 }`}
-                aria-disabled={!isActiveTab('/reports')}
               >
                 Reports
               </Link>

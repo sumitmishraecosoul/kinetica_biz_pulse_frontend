@@ -226,6 +226,12 @@ export const dashboardAPI = {
 
   getBrandVariance: (params?: any) => 
     api.get('/dashboard/variance', { params }),
+
+  // Business Area Detailed Metrics
+  getBusinessAreaDetailed: (params?: any) => 
+    api.get('/dashboard/business-area-detailed', { params }),
+
+  // Customer Analysis
 };
 
 // Health check
