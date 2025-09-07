@@ -1,8 +1,1 @@
-{
-  "/dashboard/business-analysis/page": "app/dashboard/business-analysis/page.js",
-  "/dashboard/brands/page": "app/dashboard/brands/page.js",
-  "/dashboard/page": "app/dashboard/page.js",
-  "/dashboard/reports/page": "app/dashboard/reports/page.js",
-  "/_not-found/page": "app/_not-found/page.js",
-  "/login/page": "app/login/page.js"
-}
+{}

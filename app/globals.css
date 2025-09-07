@@ -2,3 +2,26 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Remove all borders and outlines from Recharts components */
+.recharts-wrapper,
+.recharts-wrapper:focus,
+.recharts-wrapper:active,
+.recharts-surface,
+.recharts-surface:focus,
+.recharts-surface:active,
+.recharts-cartesian-axis,
+.recharts-cartesian-axis:focus,
+.recharts-cartesian-axis:active {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Remove focus styles from chart containers */
+.chart-container:focus,
+.chart-container:active {
+  outline: none !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+}

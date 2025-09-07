@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { BarChart, Bar, XAxis, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { dashboardChartsAPI } from '../../services/dashboardAPI';
 
 interface ChartProps {
@@ -22,7 +22,7 @@ const CustomTooltip = ({ active, payload, label, formatter }: any) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3">
-        <p className="text-gray-900 font-medium">{label}</p>
+        <p className="text-gray-900 font-medium" title={label}>{label}</p>
         {payload.map((entry: any, index: number) => (
           <p key={index} className="text-gray-700" style={{ color: entry.color }}>
             {entry.name}: {formatter ? formatter(entry.value) : Math.round(entry.value).toLocaleString()}
@@ -82,13 +82,15 @@ export function FGPByBusinessUnit({ filters }: ChartProps) {
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+    <div className="chart-container bg-white p-6 rounded-lg shadow-sm border border-gray-200 focus:outline-none focus:ring-0 focus:border-gray-200" style={{ outline: 'none', border: '1px solid #e5e7eb' }}>
       <h3 className="text-lg font-semibold text-gray-900 mb-4">fGP by Business Unit</h3>
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height={300} style={{ outline: 'none' }}>
         <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="business" />
-          <YAxis />
+          <XAxis 
+            dataKey="business" 
+            tick={{ fontSize: 12 }}
+            tickFormatter={(value) => value.length > 15 ? `${value.substring(0, 15)}...` : value}
+          />
           <Tooltip content={<CustomTooltip formatter={(value: any) => Math.round(value).toLocaleString()} />} />
           <Legend />
           {filters?.year?.includes('2023') && (
@@ -154,13 +156,15 @@ export function FGPByChannel({ filters }: ChartProps) {
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+    <div className="chart-container bg-white p-6 rounded-lg shadow-sm border border-gray-200 focus:outline-none focus:ring-0 focus:border-gray-200" style={{ outline: 'none', border: '1px solid #e5e7eb' }}>
       <h3 className="text-lg font-semibold text-gray-900 mb-4">fGP by Channel</h3>
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height={300} style={{ outline: 'none' }}>
         <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="channel" />
-          <YAxis />
+          <XAxis 
+            dataKey="channel" 
+            tick={{ fontSize: 12 }}
+            tickFormatter={(value) => value.length > 15 ? `${value.substring(0, 15)}...` : value}
+          />
           <Tooltip content={<CustomTooltip formatter={(value: any) => Math.round(value).toLocaleString()} />} />
           <Legend />
           {filters?.year?.includes('2023') && (
@@ -226,13 +230,15 @@ export function FGPMonthlyTrend({ filters }: ChartProps) {
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+    <div className="chart-container bg-white p-6 rounded-lg shadow-sm border border-gray-200 focus:outline-none focus:ring-0 focus:border-gray-200" style={{ outline: 'none', border: '1px solid #e5e7eb' }}>
       <h3 className="text-lg font-semibold text-gray-900 mb-4">fGP Monthly Trend (YTD)</h3>
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height={300} style={{ outline: 'none' }}>
         <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="month" />
-          <YAxis />
+          <XAxis 
+            dataKey="month" 
+            tick={{ fontSize: 12 }}
+            tickFormatter={(value) => value.length > 15 ? `${value.substring(0, 15)}...` : value}
+          />
           <Tooltip content={<CustomTooltip formatter={(value: any) => Math.round(value).toLocaleString()} />} />
           <Legend />
           {filters?.year?.includes('2023') && (
