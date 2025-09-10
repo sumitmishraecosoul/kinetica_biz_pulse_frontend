@@ -231,6 +231,20 @@ export const dashboardAPI = {
   getBusinessAreaDetailed: (params?: any) => 
     api.get('/dashboard/business-area-detailed', { params }),
 
+  // CSV Export
+  exportCSV: (params?: any) => 
+    api.get('/dashboard/export-csv', { 
+      params,
+      responseType: 'blob' // Important for file downloads
+    }),
+
+  // Reports Summary APIs
+  getReportsBusinessAreaSummary: (params?: any) => 
+    api.get('/dashboard/reports/business-area-summary', { params }),
+
+  getReportsChannelSummary: (params?: any) => 
+    api.get('/dashboard/reports/channel-summary', { params }),
+
   // Customer Analysis
 };
 
