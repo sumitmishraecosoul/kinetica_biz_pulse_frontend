@@ -6,6 +6,9 @@ const api = axios.create({
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
   },
 });
 
@@ -240,10 +243,20 @@ export const dashboardAPI = {
 
   // Reports Summary APIs
   getReportsBusinessAreaSummary: (params?: any) => 
-    api.get('/dashboard/reports/business-area-summary', { params }),
+    api.get('/dashboard/reports/business-area-summary', { 
+      params: { 
+        ...params, 
+        _t: Date.now() // Cache busting timestamp
+      } 
+    }),
 
   getReportsChannelSummary: (params?: any) => 
-    api.get('/dashboard/reports/channel-summary', { params }),
+    api.get('/dashboard/reports/channel-summary', { 
+      params: { 
+        ...params, 
+        _t: Date.now() // Cache busting timestamp
+      } 
+    }),
 
   // Customer Analysis
 };

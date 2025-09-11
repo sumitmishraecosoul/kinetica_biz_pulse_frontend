@@ -62,7 +62,7 @@ export default function SummaryFilters({
         console.error('Error fetching filter options:', error);
         // Fallback to default values
         setPeriods(['YTD', '2024', '2023', '2022']);
-        setMonths(['All', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']);
+        setMonths(['All', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']);
         setChannels(['All', 'Grocery ROI', 'Grocery NI/UK', 'Wholesale ROI', 'Wholesale NI/UK', 'International', 'Online', 'Sports & Others']);
       } finally {
         setLoading(false);
