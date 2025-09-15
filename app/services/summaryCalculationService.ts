@@ -17,6 +17,7 @@ export interface SummaryRowData {
   };
   fGP: {
     ytd: number;
+    ly: number;
     lyVar: number;
     lyVarPercent: number;
   };
@@ -331,10 +332,16 @@ export class SummaryCalculationService {
     console.log(`SUMIFS Debug - Data length: ${data.length}`);
     
     const result = data.reduce((sum, row) => {
-      // Check all criteria
-      if (criteria.year !== undefined && row.Year !== criteria.year) return sum;
+      // Check all criteria - handle year comparison with proper type conversion
+      if (criteria.year !== undefined) {
+        const rowYear = typeof row.Year === 'string' ? parseInt(row.Year) : row.Year;
+        if (rowYear !== criteria.year) return sum;
+      }
       if (criteria.month !== undefined && row['Month Name'] !== criteria.month) return sum;
-      if (criteria.businessArea !== undefined && criteria.businessArea !== 'All' && row.Business !== criteria.businessArea) return sum;
+      if (criteria.businessArea !== undefined && criteria.businessArea !== 'All') {
+        const mappedBusinessAreas = this.mapBusinessArea(criteria.businessArea);
+        if (!mappedBusinessAreas.includes(row.Business)) return sum;
+      }
       if (criteria.channel !== undefined && criteria.channel !== 'All' && row.Channel !== criteria.channel) return sum;
       if (criteria.customer !== undefined && criteria.customer !== 'All' && row.Customer !== criteria.customer) return sum;
       if (criteria.brand !== undefined && criteria.brand !== 'All' && row.Brand !== criteria.brand) return sum;
@@ -350,6 +357,20 @@ export class SummaryCalculationService {
     
     console.log(`SUMIFS Debug - Final result: ${result}`);
     return result;
+  }
+
+  /**
+   * Map report business areas to CSV business areas
+   */
+  private static mapBusinessArea(reportBusinessArea: string): string[] {
+    const businessAreaMapping: { [key: string]: string[] } = {
+      'Food': ['Food'], // Map Food to only Food
+      'Household': ['Household & Beauty'], // Map Household to Household & Beauty
+      'Brillo & KMPL': ['Brillo & KMPL', 'Brillo', 'KMPL'],
+      'Kinetica': ['Kinetica']
+    };
+    
+    return businessAreaMapping[reportBusinessArea] || [reportBusinessArea];
   }
 
   /**

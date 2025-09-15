@@ -3,7 +3,7 @@ import axios from 'axios';
 // Create axios instance with base configuration
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || `http://localhost:${process.env.NEXT_PUBLIC_API_PORT || 5000}/api/v1`,
-  timeout: 30000,
+  timeout: 60000, // Increased timeout to 60 seconds for trend calculations
   headers: {
     'Content-Type': 'application/json',
     'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -252,6 +252,30 @@ export const dashboardAPI = {
 
   getReportsChannelSummary: (params?: any) => 
     api.get('/dashboard/reports/channel-summary', { 
+      params: { 
+        ...params, 
+        _t: Date.now() // Cache busting timestamp
+      } 
+    }),
+
+  getTotalBrandsSummary: (params?: any) => 
+    api.get('/dashboard/reports/total-brands', { 
+      params: { 
+        ...params, 
+        _t: Date.now() // Cache busting timestamp
+      } 
+    }),
+
+  getTrendByMonthSummary: (params?: any) => 
+    api.get('/dashboard/reports/trend-by-month', { 
+      params: { 
+        ...params, 
+        _t: Date.now() // Cache busting timestamp
+      } 
+    }),
+
+  getCustomerSummary: (params?: any) => 
+    api.get('/dashboard/reports/customer-summary', { 
       params: { 
         ...params, 
         _t: Date.now() // Cache busting timestamp

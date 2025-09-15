@@ -51,7 +51,8 @@ export default function SummaryTable({
 
   const isTotalRow = (name: string) => {
     return name === 'Total' || name === 'Total Household' || 
-           name === 'Grocery & Wholesale ROI' || name === 'Grocery & Wholesale UK & NI';
+           name === 'Grocery & Wholesale ROI' || name === 'Grocery & Wholesale UK & NI' ||
+           name === 'Brands Total' || name === 'Private Label';
   };
 
   if (loading) {
@@ -104,6 +105,18 @@ export default function SummaryTable({
     );
   }
 
+  // Check if data is empty
+  if (!data || data.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <h3 className="text-lg font-semibold mb-4 text-gray-900">{title}</h3>
+        <div className="text-center py-8">
+          <p className="text-gray-500">No data available</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
       <h3 className="text-lg font-semibold mb-4 text-gray-900">{title}</h3>
@@ -121,7 +134,7 @@ export default function SummaryTable({
               <th className="border border-gray-300 px-3 py-2 text-center text-xs font-medium text-gray-700 uppercase tracking-wider" colSpan={4}>
                 gSales (€'000)
               </th>
-              <th className="border border-gray-300 px-3 py-2 text-center text-xs font-medium text-gray-700 uppercase tracking-wider" colSpan={3}>
+              <th className="border border-gray-300 px-3 py-2 text-center text-xs font-medium text-gray-700 uppercase tracking-wider" colSpan={4}>
                 fGP (€'000)
               </th>
               <th className="border border-gray-300 px-3 py-2 text-center text-xs font-medium text-gray-700 uppercase tracking-wider" colSpan={2}>
@@ -226,6 +239,9 @@ export default function SummaryTable({
                 €'000
               </th>
               <th className="border border-gray-300 px-3 py-1 text-center text-xs font-medium text-gray-600 uppercase tracking-wider">
+                €'000
+              </th>
+              <th className="border border-gray-300 px-3 py-1 text-center text-xs font-medium text-gray-600 uppercase tracking-wider">
                 %
               </th>
               {/* fGP % units */}
@@ -281,6 +297,9 @@ export default function SummaryTable({
                 {/* fGP columns */}
                 <td className="border border-gray-300 px-3 py-2 text-sm text-gray-900 text-center">
                   {formatNumber(item.fGP?.ytd)}
+                </td>
+                <td className="border border-gray-300 px-3 py-2 text-sm text-gray-900 text-center">
+                  {formatNumber(item.fGP?.ly)}
                 </td>
                 <td className={`border border-gray-300 px-3 py-2 text-sm text-center ${getVarianceColor(item.fGP?.lyVar)}`}>
                   {formatVariance(item.fGP?.lyVar)}

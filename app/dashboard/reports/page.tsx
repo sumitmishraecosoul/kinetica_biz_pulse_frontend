@@ -4,7 +4,10 @@ import { useState, useEffect } from 'react';
 import DashboardHeader from '../DashboardHeader';
 import CollapsibleSection from '../components/CollapsibleSection';
 import SectionFilters from '../components/SectionFilters';
+import TotalBrandsFilters from '../components/TotalBrandsFilters';
+import CustomerFilters from '../components/CustomerFilters';
 import SummaryTable from '../components/SummaryTable';
+import TrendTable from '../components/TrendTable';
 import { dashboardAPI } from '../../services/api';
 import { SummaryRowData } from '../../services/summaryCalculationService';
 
@@ -17,6 +20,7 @@ interface FilterState {
   selectedCategory: string;
   selectedSubCategory: string;
   selectedCustomer: string;
+  selectedRoi: string;
 }
 
 export default function Reports() {
@@ -31,10 +35,14 @@ export default function Reports() {
     selectedCategory: 'All',
     selectedSubCategory: 'All',
     selectedCustomer: 'All',
+    selectedRoi: 'All',
   });
 
   const [businessAreaData, setBusinessAreaData] = useState<SummaryRowData[]>([]);
   const [channelData, setChannelData] = useState<SummaryRowData[]>([]);
+  const [brandsData, setBrandsData] = useState<SummaryRowData[]>([]);
+  const [customersData, setCustomersData] = useState<SummaryRowData[]>([]);
+  const [trendData, setTrendData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
 
@@ -42,6 +50,7 @@ export default function Reports() {
   const fetchReportsData = async () => {
     try {
       console.log('Fetching reports data from Azure APIs...');
+      setLoading(true);
       
       const filterParams = {
         year: filters.selectedYear !== 'All' ? parseInt(filters.selectedYear) : undefined,
@@ -52,9 +61,14 @@ export default function Reports() {
         brand: filters.selectedBrand !== 'All' ? filters.selectedBrand : undefined,
         category: filters.selectedCategory !== 'All' ? filters.selectedCategory : undefined,
         subCategory: filters.selectedSubCategory !== 'All' ? filters.selectedSubCategory : undefined,
+        roiOnly: filters.selectedRoi === 'ROI',
       };
 
+      // Debug: Log all filter parameters to ensure month is included
+      console.log('🔍 Filter params being sent:', JSON.stringify(filterParams, null, 2));
+
       console.log('Filter params:', filterParams);
+      console.log('Current filter state:', filters);
 
       // Fetch Business Area Summary
       const businessAreaResponse = await dashboardAPI.getReportsBusinessAreaSummary(filterParams);
@@ -76,23 +90,73 @@ export default function Reports() {
       }
       setChannelData(channelResponse.data.data || []);
 
+      // Fetch Total Brands data
+      console.log('Fetching Total Brands data...');
+      const brandsResponse = await dashboardAPI.getTotalBrandsSummary(filterParams);
+      if (brandsResponse.data.success) {
+        console.log('Total Brands API Response:', brandsResponse.data);
+        console.log('Total Brands Data Array:', brandsResponse.data.data);
+        console.log('Total Brands Data Length:', brandsResponse.data.data?.length);
+        if (brandsResponse.data.data && brandsResponse.data.data.length > 0) {
+          console.log('First Brand Row:', brandsResponse.data.data[0]);
+        }
+        setBrandsData(brandsResponse.data.data || []);
+      } else {
+        console.error('Failed to fetch Total Brands data:', brandsResponse.data.error);
+        setBrandsData([]);
+      }
+
+      // Fetch Customer Summary data
+      console.log('Fetching Customer Summary data...');
+      const customersResponse = await dashboardAPI.getCustomerSummary(filterParams);
+      if (customersResponse.data.success) {
+        console.log('Customer Summary API Response:', customersResponse.data);
+        console.log('Customer Summary Data Array:', customersResponse.data.data);
+        console.log('Customer Summary Data Length:', customersResponse.data.data?.length);
+        if (customersResponse.data.data && customersResponse.data.data.length > 0) {
+          console.log('First Customer Row:', customersResponse.data.data[0]);
+        }
+        setCustomersData(customersResponse.data.data || []);
+      } else {
+        console.error('Failed to fetch Customer Summary data:', customersResponse.data.error);
+        setCustomersData([]);
+      }
+
+      // Fetch Trend by Month data
+      console.log('Fetching Trend by Month data...');
+      const trendResponse = await dashboardAPI.getTrendByMonthSummary(filterParams);
+      if (trendResponse.data.success) {
+        console.log('Trend by Month API Response:', trendResponse.data);
+        console.log('Trend by Month Data Array:', trendResponse.data.data);
+        console.log('Trend by Month Data Length:', trendResponse.data.data?.length);
+        if (trendResponse.data.data && trendResponse.data.data.length > 0) {
+          console.log('First Trend Row:', trendResponse.data.data[0]);
+        }
+        setTrendData(trendResponse.data.data || []);
+      } else {
+        console.error('Failed to fetch Trend by Month data:', trendResponse.data.error);
+        setTrendData([]);
+      }
+
     } catch (error) {
       console.error('Error fetching reports data:', error);
       // Set empty data on error
       setBusinessAreaData([]);
       setChannelData([]);
+      setBrandsData([]);
+      setCustomersData([]);
+      setTrendData([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   // Fetch data when filters change
   const fetchData = async () => {
-    setLoading(true);
     try {
       await fetchReportsData();
     } catch (error) {
       console.error('Error fetching reports data:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -112,7 +176,7 @@ export default function Reports() {
 
   const handleResetFilters = () => {
     setFilters({
-      selectedYear: 'All',
+      selectedYear: '2024',
       selectedMonth: 'All',
       selectedBusinessArea: 'All',
       selectedChannel: 'All',
@@ -120,6 +184,7 @@ export default function Reports() {
       selectedCategory: 'All',
       selectedSubCategory: 'All',
       selectedCustomer: 'All',
+      selectedRoi: 'All',
     });
   };
 
@@ -135,6 +200,7 @@ export default function Reports() {
         category: filters.selectedCategory !== 'All' ? filters.selectedCategory : undefined,
         subCategory: filters.selectedSubCategory !== 'All' ? filters.selectedSubCategory : undefined,
         customer: filters.selectedCustomer !== 'All' ? filters.selectedCustomer : undefined,
+        roiOnly: filters.selectedRoi === 'ROI',
       };
 
       const response = await dashboardAPI.exportCSV(filterParams);
@@ -245,23 +311,21 @@ export default function Reports() {
 
           {/* Total Brands Section */}
           <CollapsibleSection title="Total Brands">
-            <SectionFilters
+            <TotalBrandsFilters
               selectedYear={filters.selectedYear}
               setSelectedYear={(year) => setFilters(prev => ({ ...prev, selectedYear: year }))}
               selectedMonth={filters.selectedMonth}
               setSelectedMonth={(month) => setFilters(prev => ({ ...prev, selectedMonth: month }))}
-              selectedBusinessArea={filters.selectedBusinessArea}
-              setSelectedBusinessArea={(area) => setFilters(prev => ({ ...prev, selectedBusinessArea: area }))}
               selectedChannel={filters.selectedChannel}
               setSelectedChannel={(channel) => setFilters(prev => ({ ...prev, selectedChannel: channel }))}
-              selectedBrand={filters.selectedBrand}
-              setSelectedBrand={(brand) => setFilters(prev => ({ ...prev, selectedBrand: brand }))}
               selectedCategory={filters.selectedCategory}
               setSelectedCategory={(category) => setFilters(prev => ({ ...prev, selectedCategory: category }))}
               selectedSubCategory={filters.selectedSubCategory}
               setSelectedSubCategory={(subCategory) => setFilters(prev => ({ ...prev, selectedSubCategory: subCategory }))}
               selectedCustomer={filters.selectedCustomer}
               setSelectedCustomer={(customer) => setFilters(prev => ({ ...prev, selectedCustomer: customer }))}
+              selectedRoi={filters.selectedRoi}
+              setSelectedRoi={(roi) => setFilters(prev => ({ ...prev, selectedRoi: roi }))}
               onApplyFilters={handleApplyFilters}
               onResetFilters={handleResetFilters}
               onDownloadCSV={handleExportCSV}
@@ -269,28 +333,27 @@ export default function Reports() {
             />
             
             <div className="mt-6">
-          <div className="bg-white rounded-lg shadow-sm p-6">
-                <h3 className="text-lg font-semibold mb-4 text-gray-900">Brand Performance</h3>
-                <div className="text-center py-8 text-gray-500">
-                  Brand performance data will be displayed here
-                </div>
+              <div className="mb-4 p-2 bg-gray-100 rounded text-sm">
+                Debug: Brands Data length = {brandsData.length}, Loading = {loading.toString()}, ROI = {filters.selectedRoi}
               </div>
+              <SummaryTable 
+                data={brandsData}
+                title="Brand Name"
+                loading={loading}
+                periodLabel={filters.selectedMonth !== 'All' ? filters.selectedMonth : 'YTD'}
+              />
             </div>
           </CollapsibleSection>
 
           {/* Customers Section */}
           <CollapsibleSection title="Customers">
-            <SectionFilters
+            <CustomerFilters
               selectedYear={filters.selectedYear}
               setSelectedYear={(year) => setFilters(prev => ({ ...prev, selectedYear: year }))}
               selectedMonth={filters.selectedMonth}
               setSelectedMonth={(month) => setFilters(prev => ({ ...prev, selectedMonth: month }))}
-              selectedBusinessArea={filters.selectedBusinessArea}
-              setSelectedBusinessArea={(area) => setFilters(prev => ({ ...prev, selectedBusinessArea: area }))}
               selectedChannel={filters.selectedChannel}
               setSelectedChannel={(channel) => setFilters(prev => ({ ...prev, selectedChannel: channel }))}
-              selectedBrand={filters.selectedBrand}
-              setSelectedBrand={(brand) => setFilters(prev => ({ ...prev, selectedBrand: brand }))}
               selectedCategory={filters.selectedCategory}
               setSelectedCategory={(category) => setFilters(prev => ({ ...prev, selectedCategory: category }))}
               selectedSubCategory={filters.selectedSubCategory}
@@ -304,17 +367,20 @@ export default function Reports() {
             />
             
             <div className="mt-6">
-        <div className="bg-white rounded-lg shadow-sm p-6">
-                <h3 className="text-lg font-semibold mb-4 text-gray-900">Customer Performance</h3>
-                <div className="text-center py-8 text-gray-500">
-                  Customer performance data will be displayed here
-                </div>
+              <div className="mb-4 p-2 bg-gray-100 rounded text-sm">
+                Debug: Customers Data length = {customersData.length}, Loading = {loading.toString()}
               </div>
+              <SummaryTable 
+                data={customersData}
+                title="Customer Name"
+                loading={loading}
+                periodLabel={filters.selectedMonth !== 'All' ? filters.selectedMonth : 'YTD'}
+              />
             </div>
           </CollapsibleSection>
 
           {/* Trend Section */}
-          <CollapsibleSection title="Trend">
+          <CollapsibleSection title="Trend by Month">
             <SectionFilters
               selectedYear={filters.selectedYear}
               setSelectedYear={(year) => setFilters(prev => ({ ...prev, selectedYear: year }))}
@@ -339,12 +405,15 @@ export default function Reports() {
             />
             
             <div className="mt-6">
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h3 className="text-lg font-semibold mb-4 text-gray-900">Trend Analysis</h3>
-                <div className="text-center py-8 text-gray-500">
-                  Trend analysis charts will be displayed here
-                </div>
+              <div className="mb-4 p-2 bg-gray-100 rounded text-sm">
+                Debug: Trend Data length = {trendData.length}, Loading = {loading.toString()}
               </div>
+              <TrendTable 
+                data={trendData}
+                title="Trend by Month"
+                loading={loading}
+                periodLabel={filters.selectedMonth !== 'All' ? filters.selectedMonth : 'YTD'}
+              />
             </div>
           </CollapsibleSection>
 
