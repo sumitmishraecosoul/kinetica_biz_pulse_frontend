@@ -234,11 +234,48 @@ export const dashboardAPI = {
   getBusinessAreaDetailed: (params?: any) => 
     api.get('/dashboard/business-area-detailed', { params }),
 
-  // CSV Export
+  // CSV Export - Generic
   exportCSV: (params?: any) => 
     api.get('/dashboard/export-csv', { 
       params,
       responseType: 'blob' // Important for file downloads
+    }),
+
+  // Section-specific CSV Export endpoints
+  exportSummaryCSV: (params?: any) => 
+    api.get('/dashboard/export-csv/summary', { 
+      params,
+      responseType: 'blob'
+    }),
+
+  exportTotalBrandsCSV: (params?: any) => 
+    api.get('/dashboard/export-csv/total-brands', { 
+      params,
+      responseType: 'blob'
+    }),
+
+  exportCustomersCSV: (params?: any) => 
+    api.get('/dashboard/export-csv/customers', { 
+      params,
+      responseType: 'blob'
+    }),
+
+  exportTrendByMonthCSV: (params?: any) => 
+    api.get('/dashboard/export-csv/trend-by-month', { 
+      params,
+      responseType: 'blob'
+    }),
+
+  exportSalesToFGPCSV: (params?: any) => 
+    api.get('/dashboard/export-csv/sales-to-fgp', { 
+      params,
+      responseType: 'blob'
+    }),
+
+  exportFoodBrandsCSV: (params?: any) => 
+    api.get('/dashboard/export-csv/food-brands', { 
+      params,
+      responseType: 'blob'
     }),
 
   // Reports Summary APIs
@@ -265,6 +302,37 @@ export const dashboardAPI = {
         _t: Date.now() // Cache busting timestamp
       } 
     }),
+
+  getSalesToFGPSummary: (params?: any) => 
+    api.get('/dashboard/reports/sales-to-fgp', { 
+      params: { 
+        ...params, 
+        _t: Date.now() // Cache busting timestamp
+      } 
+    }),
+
+  getFoodBrandsSummary: (params?: any) => 
+    api.get('/dashboard/reports/food-brands', { 
+      params: { 
+        ...params, 
+        _t: Date.now() // Cache busting timestamp
+      } 
+    }),
+
+    getFoodBrandsDetails: (params?: any) => 
+      api.get('/dashboard/reports/food-brands-details', { 
+        params: { 
+          ...params, 
+          _t: Date.now() // Cache busting timestamp
+        } 
+      }),
+    getHouseholdBrands: (params?: any) => 
+      api.get('/dashboard/reports/household-brands', { 
+        params: { 
+          ...params, 
+          _t: Date.now() // Cache busting timestamp
+        } 
+      }),
 
   getTrendByMonthSummary: (params?: any) => 
     api.get('/dashboard/reports/trend-by-month', { 

@@ -24,6 +24,12 @@ interface SectionFiltersProps {
   onResetFilters: () => void;
   onDownloadCSV: () => void;
   isDownloading?: boolean;
+  sectionType?: 'summary' | 'trend' | 'sales-to-fgp' | 'food-brands' | 'food-brands-details' | 'household-brands';
+  // Hide filter options
+  hideBusinessArea?: boolean;
+  hideBrand?: boolean;
+  hideCategory?: boolean;
+  hideSubCategory?: boolean;
 }
 
 export default function SectionFilters({
@@ -46,7 +52,12 @@ export default function SectionFilters({
   onApplyFilters,
   onResetFilters,
   onDownloadCSV,
-  isDownloading = false
+  isDownloading = false,
+  sectionType = 'summary',
+  hideBusinessArea = false,
+  hideBrand = false,
+  hideCategory = false,
+  hideSubCategory = false
 }: SectionFiltersProps) {
   const [years, setYears] = useState<string[]>(['All']);
   const [months, setMonths] = useState<string[]>(['All']);
@@ -189,11 +200,11 @@ export default function SectionFilters({
         <div className="flex flex-wrap gap-2 text-xs">
           <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">Year: {selectedYear}</span>
           <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">Month: {selectedMonth}</span>
-          <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">Business Area: {selectedBusinessArea}</span>
+          {!hideBusinessArea && <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">Business Area: {selectedBusinessArea}</span>}
           <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">Channel: {selectedChannel}</span>
-          <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">Brand: {selectedBrand}</span>
-          <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">Category: {selectedCategory}</span>
-          <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">Sub Category: {selectedSubCategory}</span>
+          {!hideBrand && <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">Brand: {selectedBrand}</span>}
+          {!hideCategory && <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">Category: {selectedCategory}</span>}
+          {!hideSubCategory && <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">Sub Category: {selectedSubCategory}</span>}
           <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">Customer: {selectedCustomer}</span>
         </div>
       </div>
@@ -226,18 +237,20 @@ export default function SectionFilters({
           </select>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Business Area *</label>
-          <select
-            value={selectedBusinessArea}
-            onChange={(e) => handleBusinessAreaChange(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            {businessAreas.map(area => (
-              <option key={area} value={area}>{area}</option>
-            ))}
-          </select>
-        </div>
+        {!hideBusinessArea && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Business Area *</label>
+            <select
+              value={selectedBusinessArea}
+              onChange={(e) => handleBusinessAreaChange(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              {businessAreas.map(area => (
+                <option key={area} value={area}>{area}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Channel *</label>
@@ -252,44 +265,50 @@ export default function SectionFilters({
           </select>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Brand *</label>
-          <select
-            value={selectedBrand}
-            onChange={(e) => handleBrandChange(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            {brands.map(brand => (
-              <option key={brand} value={brand}>{brand}</option>
-            ))}
-          </select>
-        </div>
+        {!hideBrand && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Brand *</label>
+            <select
+              value={selectedBrand}
+              onChange={(e) => handleBrandChange(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              {brands.map(brand => (
+                <option key={brand} value={brand}>{brand}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
-          <select
-            value={selectedCategory}
-            onChange={(e) => handleCategoryChange(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            {categories.map(category => (
-              <option key={category} value={category}>{category}</option>
-            ))}
-          </select>
-        </div>
+        {!hideCategory && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
+            <select
+              value={selectedCategory}
+              onChange={(e) => handleCategoryChange(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              {categories.map(category => (
+                <option key={category} value={category}>{category}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Sub Category *</label>
-          <select
-            value={selectedSubCategory}
-            onChange={(e) => setSelectedSubCategory(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            {subCategories.map(subCategory => (
-              <option key={subCategory} value={subCategory}>{subCategory}</option>
-            ))}
-          </select>
-        </div>
+        {!hideSubCategory && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Sub Category *</label>
+            <select
+              value={selectedSubCategory}
+              onChange={(e) => setSelectedSubCategory(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              {subCategories.map(subCategory => (
+                <option key={subCategory} value={subCategory}>{subCategory}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Customer *</label>

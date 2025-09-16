@@ -22,6 +22,7 @@ interface TotalBrandsFiltersProps {
   onResetFilters: () => void;
   onDownloadCSV: () => void;
   isDownloading?: boolean;
+  sectionType?: 'total-brands';
 }
 
 export default function TotalBrandsFilters({
@@ -42,7 +43,8 @@ export default function TotalBrandsFilters({
   onApplyFilters,
   onResetFilters,
   onDownloadCSV,
-  isDownloading = false
+  isDownloading = false,
+  sectionType = 'total-brands'
 }: TotalBrandsFiltersProps) {
   const [filterOptions, setFilterOptions] = useState<any>(null);
   const [loading, setLoading] = useState(true);
