@@ -66,13 +66,13 @@ export const generateSummaryCSVHeaders = (periodLabel: string = 'YTD'): string[]
     // Cases columns
     `Cases ${periodLabel}`, 'Cases LY', 'Cases LY Var', 'Cases LY Var %',
     // gSales columns
-    `gSales ${periodLabel} (€'000)`, 'gSales LY (€'000)', 'gSales LY Var (€'000)', 'gSales LY Var %',
+    `gSales ${periodLabel} (€'000)`, 'gSales LY (€\'000)', 'gSales LY Var (€\'000)', 'gSales LY Var %',
     // fGP columns
-    `fGP ${periodLabel} (€'000)`, 'fGP LY (€'000)', 'fGP LY Var (€'000)', 'fGP LY Var %',
+    `fGP ${periodLabel} (€'000)`, 'fGP LY (€\'000)', 'fGP LY Var (€\'000)', 'fGP LY Var %',
     // fGP % columns
     `fGP % ${periodLabel}`, 'fGP % LY Var',
     // fGP FY24 columns
-    `fGP FY24 ${periodLabel} (€'000)`, 'fGP FY24 CY v LY %'
+    `fGP FY24 ${periodLabel} (€\'000)`, 'fGP FY24 CY v LY %'
   ];
 };
 
@@ -102,9 +102,9 @@ export const generateSalesToFGPCSVHeaders = (currentYear: number = 2025, previou
   return [
     'Item',
     // Current Year columns
-    `${currentYear} No.`, `${currentYear} €'000`, `${currentYear} % sales`,
+    `${currentYear} No.`, `${currentYear} €\'000`, `${currentYear} % sales`,
     // Previous Year columns
-    `${previousYear} No.`, `${previousYear} €'000`, `${previousYear} % sales`,
+    `${previousYear} No.`, `${previousYear} €\'000`, `${previousYear} % sales`,
     // Variance columns
     'Variance No.', 'Variance €\'000', 'Variance %',
     // Var % Sales

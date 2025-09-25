@@ -53,14 +53,22 @@ export default function CustomerAnalysis() {
         </div>
 
         <CustomerFilters
-          selectedPeriod={selectedPeriod}
-          setSelectedPeriod={setSelectedPeriod}
+          selectedYear={selectedPeriod}
+          setSelectedYear={setSelectedPeriod}
+          selectedMonth="All"
+          setSelectedMonth={() => {}}
           selectedChannel={selectedChannel}
           setSelectedChannel={setSelectedChannel}
+          selectedCategory="All"
+          setSelectedCategory={() => {}}
+          selectedSubCategory="All"
+          setSelectedSubCategory={() => {}}
           selectedCustomer={selectedCustomer}
           setSelectedCustomer={setSelectedCustomer}
-          selectedBusinessArea={selectedBusinessArea}
-          setSelectedBusinessArea={setSelectedBusinessArea}
+          onApplyFilters={() => {}}
+          onResetFilters={() => {}}
+          onDownloadCSV={() => {}}
+          sectionType="customers"
         />
 
         <CustomerOverviewCards

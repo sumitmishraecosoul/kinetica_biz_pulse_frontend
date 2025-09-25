@@ -24,7 +24,7 @@ interface SectionFiltersProps {
   onResetFilters: () => void;
   onDownloadCSV: () => void;
   isDownloading?: boolean;
-  sectionType?: 'summary' | 'trend' | 'sales-to-fgp' | 'food-brands' | 'food-brands-details' | 'household-brands';
+  sectionType?: 'summary' | 'trend' | 'sales-to-fgp' | 'food-brands' | 'food-brands-details' | 'household-brands' | 'household-brands-details';
   // Hide filter options
   hideBusinessArea?: boolean;
   hideBrand?: boolean;

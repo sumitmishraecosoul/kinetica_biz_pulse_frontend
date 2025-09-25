@@ -189,6 +189,45 @@ export class SummaryCalculationService {
       subCategory: filters.subCategory
     });
 
+    console.log(`🔍 ${rowName} Cases - YTD: ${casesYTD}, LY: ${casesLY}, Var: ${casesYTD - casesLY}`);
+    
+    // Debug: Let's see what data is actually being matched for Household
+    if (rowName === 'Household') {
+      console.log(`\n=== DEBUGGING HOUSEHOLD DATA ===`);
+      
+      // Check 2025 data for Household
+      const household2025 = rawData.filter(row => {
+        const rowYear = typeof row.Year === 'string' ? parseInt(row.Year) : row.Year;
+        return rowYear === 2025 && row.Business === 'Household & Beauty';
+      });
+      console.log(`Household 2025 data rows: ${household2025.length}`);
+      if (household2025.length > 0) {
+        console.log(`Sample 2025 row:`, {
+          Year: household2025[0].Year,
+          Business: household2025[0].Business,
+          Cases: household2025[0].Cases,
+          gSales: household2025[0].gSales,
+          fGP: household2025[0].fGP
+        });
+      }
+      
+      // Check 2024 data for Household
+      const household2024 = rawData.filter(row => {
+        const rowYear = typeof row.Year === 'string' ? parseInt(row.Year) : row.Year;
+        return rowYear === 2024 && row.Business === 'Household & Beauty';
+      });
+      console.log(`Household 2024 data rows: ${household2024.length}`);
+      if (household2024.length > 0) {
+        console.log(`Sample 2024 row:`, {
+          Year: household2024[0].Year,
+          Business: household2024[0].Business,
+          Cases: household2024[0].Cases,
+          gSales: household2024[0].gSales,
+          fGP: household2024[0].fGP
+        });
+      }
+    }
+
     // Formula 3: Cases LY Var = C10-D10
     const casesLYVar = casesYTD - casesLY;
 
@@ -282,6 +321,11 @@ export class SummaryCalculationService {
     // Formula 15: fGP FY24 CY v LY % = IFERROR(M10/ABS(V10),0)
     const fGPFY24CYVLy = this.iferror(fGPYTD / Math.abs(fGPFY24YTD), 0) * 100;
 
+    // Debug: Show the raw calculated values before formatting
+    console.log(`🔍 ${rowName} RAW VALUES - Cases YTD: ${casesYTD}, Cases LY: ${casesLY}`);
+    console.log(`🔍 ${rowName} RAW VALUES - gSales YTD: ${gSalesYTD}, gSales LY: ${gSalesLY}`);
+    console.log(`🔍 ${rowName} RAW VALUES - fGP YTD: ${fGPYTD}, fGP LY: ${fGPLY}`);
+
     return {
       cases: {
         ytd: Math.round(casesYTD),
@@ -290,13 +334,14 @@ export class SummaryCalculationService {
         lyVarPercent: Math.round(casesLYVarPercent * 10) / 10
       },
       gSales: {
-        ytd: Math.round(gSalesYTD),
+        ytd: Math.round(gSalesYTD), // Already divided by 1000 in calculation, round to whole number
         ly: Math.round(gSalesLY),
         lyVar: Math.round(gSalesLYVar),
         lyVarPercent: Math.round(gSalesLYVarPercent * 10) / 10
       },
       fGP: {
-        ytd: Math.round(fGPYTD),
+        ytd: Math.round(fGPYTD), // Already divided by 1000 in calculation, round to whole number
+        ly: Math.round(fGPLY),
         lyVar: Math.round(fGPLYVar),
         lyVarPercent: Math.round(fGPLYVarPercent * 10) / 10
       },
@@ -305,7 +350,7 @@ export class SummaryCalculationService {
         lyVar: Math.round(fGPPercentLYVar * 10) / 10
       },
       fGPFY24: {
-        ytd: Math.round(fGPFY24YTD),
+        ytd: Math.round(fGPFY24YTD), // Already divided by 1000 in calculation, round to whole number
         cyVLy: Math.round(fGPFY24CYVLy * 10) / 10
       }
     };
@@ -328,34 +373,94 @@ export class SummaryCalculationService {
       subCategory?: string;
     }
   ): number {
-    console.log(`SUMIFS Debug - Column: ${sumColumn}, Criteria:`, criteria);
-    console.log(`SUMIFS Debug - Data length: ${data.length}`);
+    console.log(`\n=== SUMIFS Debug ===`);
+    console.log(`Column: ${sumColumn}`);
+    console.log(`Criteria:`, criteria);
+    console.log(`Data length: ${data.length}`);
     
-    const result = data.reduce((sum, row) => {
-      // Check all criteria - handle year comparison with proper type conversion
-      if (criteria.year !== undefined) {
+    // First, filter the data based on criteria
+    let filteredData = data;
+    
+    // Filter by year
+    if (criteria.year !== undefined) {
+      filteredData = filteredData.filter(row => {
         const rowYear = typeof row.Year === 'string' ? parseInt(row.Year) : row.Year;
-        if (rowYear !== criteria.year) return sum;
-      }
-      if (criteria.month !== undefined && row['Month Name'] !== criteria.month) return sum;
-      if (criteria.businessArea !== undefined && criteria.businessArea !== 'All') {
-        const mappedBusinessAreas = this.mapBusinessArea(criteria.businessArea);
-        if (!mappedBusinessAreas.includes(row.Business)) return sum;
-      }
-      if (criteria.channel !== undefined && criteria.channel !== 'All' && row.Channel !== criteria.channel) return sum;
-      if (criteria.customer !== undefined && criteria.customer !== 'All' && row.Customer !== criteria.customer) return sum;
-      if (criteria.brand !== undefined && criteria.brand !== 'All' && row.Brand !== criteria.brand) return sum;
-      if (criteria.category !== undefined && criteria.category !== 'All' && row.Category !== criteria.category) return sum;
-      if (criteria.subCategory !== undefined && criteria.subCategory !== 'All' && row['Sub-Cat'] !== criteria.subCategory) return sum;
-
-      // If all criteria match, add the value
+        return rowYear === criteria.year;
+      });
+      console.log(`After year filter (${criteria.year}): ${filteredData.length} rows`);
+    }
+    
+    // Filter by month
+    if (criteria.month !== undefined) {
+      filteredData = filteredData.filter(row => row['Month Name'] === criteria.month);
+      console.log(`After month filter (${criteria.month}): ${filteredData.length} rows`);
+    }
+    
+    // Filter by business area
+    if (criteria.businessArea !== undefined && criteria.businessArea !== 'All') {
+      const mappedBusinessAreas = this.mapBusinessArea(criteria.businessArea);
+      filteredData = filteredData.filter(row => mappedBusinessAreas.includes(row.Business));
+      console.log(`After business area filter (${criteria.businessArea} -> ${mappedBusinessAreas.join(', ')}): ${filteredData.length} rows`);
+    }
+    
+    // Filter by channel
+    if (criteria.channel !== undefined && criteria.channel !== 'All') {
+      filteredData = filteredData.filter(row => row.Channel === criteria.channel);
+      console.log(`After channel filter (${criteria.channel}): ${filteredData.length} rows`);
+    }
+    
+    // Filter by customer
+    if (criteria.customer !== undefined && criteria.customer !== 'All') {
+      filteredData = filteredData.filter(row => row.Customer === criteria.customer);
+      console.log(`After customer filter (${criteria.customer}): ${filteredData.length} rows`);
+    }
+    
+    // Filter by brand
+    if (criteria.brand !== undefined && criteria.brand !== 'All') {
+      filteredData = filteredData.filter(row => row.Brand === criteria.brand);
+      console.log(`After brand filter (${criteria.brand}): ${filteredData.length} rows`);
+    }
+    
+    // Filter by category
+    if (criteria.category !== undefined && criteria.category !== 'All') {
+      filteredData = filteredData.filter(row => row.Category === criteria.category);
+      console.log(`After category filter (${criteria.category}): ${filteredData.length} rows`);
+    }
+    
+    // Filter by sub-category
+    if (criteria.subCategory !== undefined && criteria.subCategory !== 'All') {
+      filteredData = filteredData.filter(row => row['Sub-Cat'] === criteria.subCategory);
+      console.log(`After sub-category filter (${criteria.subCategory}): ${filteredData.length} rows`);
+    }
+    
+    // Now sum the values from filtered data
+    const result = filteredData.reduce((sum, row) => {
       const value = row[sumColumn];
-      const numericValue = typeof value === 'number' ? value : 0;
-      console.log(`SUMIFS Debug - Row matches, adding ${numericValue} from ${sumColumn}`);
+      let numericValue = 0;
+      
+      if (typeof value === 'number') {
+        numericValue = value;
+      } else if (typeof value === 'string') {
+        // Handle string values that might have commas or other formatting
+        // Remove commas and any other non-numeric characters except decimal point
+        const cleanValue = value.replace(/[^\d.-]/g, '').trim();
+        numericValue = parseFloat(cleanValue) || 0;
+      }
+      
       return sum + numericValue;
     }, 0);
     
-    console.log(`SUMIFS Debug - Final result: ${result}`);
+    console.log(`SUMIFS Debug - Final result: ${result} (from ${filteredData.length} matching rows)`);
+    
+    // Show sample of filtered data for debugging
+    if (filteredData.length > 0 && filteredData.length <= 5) {
+      console.log(`Sample filtered rows:`, filteredData.map(row => ({
+        Year: row.Year,
+        Business: row.Business,
+        [sumColumn]: row[sumColumn]
+      })));
+    }
+    
     return result;
   }
 
@@ -365,8 +470,8 @@ export class SummaryCalculationService {
   private static mapBusinessArea(reportBusinessArea: string): string[] {
     const businessAreaMapping: { [key: string]: string[] } = {
       'Food': ['Food'], // Map Food to only Food
-      'Household': ['Household & Beauty'], // Map Household to Household & Beauty
-      'Brillo & KMPL': ['Brillo & KMPL', 'Brillo', 'KMPL'],
+      'Household': ['Household & Beauty'], // Map Household to only Household & Beauty (not 'Household')
+      'Brillo & KMPL': ['Brillo & KMPL', 'Brillo, Goddards & KMPL'],
       'Kinetica': ['Kinetica']
     };
     
@@ -510,6 +615,7 @@ export class SummaryCalculationService {
         },
         fGP: {
           ytd: acc.fGP.ytd + row.fGP.ytd,
+          ly: acc.fGP.ly + row.fGP.ly,
           lyVar: acc.fGP.lyVar + row.fGP.lyVar,
           lyVarPercent: 0 // Will be calculated
         },
@@ -525,7 +631,7 @@ export class SummaryCalculationService {
     }, {
       cases: { ytd: 0, ly: 0, lyVar: 0, lyVarPercent: 0 },
       gSales: { ytd: 0, ly: 0, lyVar: 0, lyVarPercent: 0 },
-      fGP: { ytd: 0, lyVar: 0, lyVarPercent: 0 },
+      fGP: { ytd: 0, ly: 0, lyVar: 0, lyVarPercent: 0 },
       fGPPercent: { ytd: 0, lyVar: 0 },
       fGPFY24: { ytd: 0, cyVLy: 0 }
     });
@@ -551,7 +657,7 @@ export class SummaryCalculationService {
       return {
         cases: { ytd: 0, ly: 0, lyVar: 0, lyVarPercent: 0 },
         gSales: { ytd: 0, ly: 0, lyVar: 0, lyVarPercent: 0 },
-        fGP: { ytd: 0, lyVar: 0, lyVarPercent: 0 },
+        fGP: { ytd: 0, ly: 0, lyVar: 0, lyVarPercent: 0 },
         fGPPercent: { ytd: 0, lyVar: 0 },
         fGPFY24: { ytd: 0, cyVLy: 0 }
       };
@@ -572,6 +678,7 @@ export class SummaryCalculationService {
       },
       fGP: {
         ytd: householdRow.fGP.ytd + brilloRow.fGP.ytd,
+        ly: householdRow.fGP.ly + brilloRow.fGP.ly,
         lyVar: householdRow.fGP.lyVar + brilloRow.fGP.lyVar,
         lyVarPercent: 0
       },
@@ -610,7 +717,7 @@ export class SummaryCalculationService {
         name: combinedName,
         cases: { ytd: 0, ly: 0, lyVar: 0, lyVarPercent: 0 },
         gSales: { ytd: 0, ly: 0, lyVar: 0, lyVarPercent: 0 },
-        fGP: { ytd: 0, lyVar: 0, lyVarPercent: 0 },
+        fGP: { ytd: 0, ly: 0, lyVar: 0, lyVarPercent: 0 },
         fGPPercent: { ytd: 0, lyVar: 0 },
         fGPFY24: { ytd: 0, cyVLy: 0 }
       };
@@ -631,6 +738,7 @@ export class SummaryCalculationService {
       },
       fGP: {
         ytd: acc.fGP.ytd + row.fGP.ytd,
+        ly: acc.fGP.ly + row.fGP.ly,
         lyVar: acc.fGP.lyVar + row.fGP.lyVar,
         lyVarPercent: 0
       },
@@ -645,7 +753,7 @@ export class SummaryCalculationService {
     }), {
       cases: { ytd: 0, ly: 0, lyVar: 0, lyVarPercent: 0 },
       gSales: { ytd: 0, ly: 0, lyVar: 0, lyVarPercent: 0 },
-      fGP: { ytd: 0, lyVar: 0, lyVarPercent: 0 },
+      fGP: { ytd: 0, ly: 0, lyVar: 0, lyVarPercent: 0 },
       fGPPercent: { ytd: 0, lyVar: 0 },
       fGPFY24: { ytd: 0, cyVLy: 0 }
     });

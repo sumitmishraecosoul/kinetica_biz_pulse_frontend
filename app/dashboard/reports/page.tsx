@@ -12,6 +12,7 @@ import SalesToFGPTable from '../components/SalesToFGPTable';
 import FoodBrandsTable from '../components/FoodBrandsTable';
 import FoodBrandsDetailsTable from '../components/FoodBrandsDetailsTable';
 import HouseholdBrandsTable from '../components/HouseholdBrandsTable';
+import HouseholdBrandsDetailsTable from '../components/HouseholdBrandsDetailsTable';
 import { dashboardAPI } from '../../services/api';
 import { SummaryRowData } from '../../services/summaryCalculationService';
 
@@ -466,6 +467,69 @@ const generateHouseholdBrandsTableCSV = (data: any[]): string => {
   return rows.join('\n');
 };
 
+const generateHouseholdBrandsDetailsTableCSV = (data: any[]): string => {
+  const headers = [
+    'Brand',
+    'Sub-Category',
+    'Product',
+    // Cases columns
+    'Cases YTD No.', 'Cases LY Var No.', 'Cases LY Var %',
+    // gSales columns
+    "gSales YTD €'000", "gSales LY Var €'000", 'gSales LY Var %',
+    // fGP columns
+    "fGP YTD €'000", "fGP LY Var €'000", 'fGP LY Var %',
+    // fGP % columns
+    'fGP % YTD %', 'fGP % LY Var %'
+  ];
+
+  const rows = [arrayToCSVRow(headers)];
+
+  // Group data by brand and sub-category
+  const groupedData = data.reduce((acc, item) => {
+    if (!acc[item.brand]) {
+      acc[item.brand] = {};
+    }
+    if (!acc[item.brand][item.subCategory]) {
+      acc[item.brand][item.subCategory] = [];
+    }
+    acc[item.brand][item.subCategory].push(item);
+    return acc;
+  }, {} as Record<string, Record<string, any[]>>);
+
+  // Process each brand and its sub-categories
+  Object.entries(groupedData).forEach(([brand, subCategories]) => {
+    // Add brand header
+    rows.push(arrayToCSVRow([brand, '', '', '', '', '', '', '', '', '', '', '', '', '']));
+    
+    Object.entries(subCategories as Record<string, any[]>).forEach(([subCategory, products]) => {
+      // Add sub-category header
+      rows.push(arrayToCSVRow(['', subCategory, '', '', '', '', '', '', '', '', '', '', '', '']));
+      
+      // Add product rows
+      products.forEach((product: any) => {
+        rows.push(arrayToCSVRow([
+          '',
+          '',
+          product.name,
+          formatNumberForCSV(product.cases?.ytd),
+          formatVarianceForCSV(product.cases?.lyVar),
+          formatVarianceForCSV(product.cases?.lyVarPercent, true),
+          formatNumberForCSV(product.gSales?.ytd),
+          formatVarianceForCSV(product.gSales?.lyVar),
+          formatVarianceForCSV(product.gSales?.lyVarPercent, true),
+          formatNumberForCSV(product.fGP?.ytd),
+          formatVarianceForCSV(product.fGP?.lyVar),
+          formatVarianceForCSV(product.fGP?.lyVarPercent, true),
+          formatNumberForCSV(product.fGPPercent?.ytd, true),
+          formatVarianceForCSV(product.fGPPercent?.lyVar, true)
+        ]));
+      });
+    });
+  });
+
+  return rows.join('\n');
+};
+
 interface FilterState {
   selectedYear: string;
   selectedMonth: string;
@@ -617,6 +681,7 @@ export default function Reports() {
   const [foodBrandsData, setFoodBrandsData] = useState<any[]>([]);
   const [foodBrandsDetailsData, setFoodBrandsDetailsData] = useState<any[]>([]);
   const [householdBrandsData, setHouseholdBrandsData] = useState<any[]>([]);
+  const [householdBrandsDetailsData, setHouseholdBrandsDetailsData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
 
@@ -785,6 +850,30 @@ export default function Reports() {
           setHouseholdBrandsData(getHouseholdBrandsMockData());
         }
 
+        // Fetch Household Brands Details data
+        console.log('Fetching Household Brands Details data...');
+        try {
+          const householdBrandsDetailsResponse = await dashboardAPI.getHouseholdBrandsDetails(filterParams);
+          if (householdBrandsDetailsResponse.data.success) {
+            console.log('Household Brands Details API Response:', householdBrandsDetailsResponse.data);
+            console.log('Household Brands Details Data Array:', householdBrandsDetailsResponse.data.data);
+            console.log('Household Brands Details Data Length:', householdBrandsDetailsResponse.data.data?.length);
+            if (householdBrandsDetailsResponse.data.data && householdBrandsDetailsResponse.data.data.length > 0) {
+              console.log('First Household Brands Details Row:', householdBrandsDetailsResponse.data.data[0]);
+              setHouseholdBrandsDetailsData(householdBrandsDetailsResponse.data.data);
+            } else {
+              console.log('🔍 No real data for Household Brands Details, using empty array');
+              setHouseholdBrandsDetailsData([]);
+            }
+          } else {
+            console.error('Failed to fetch Household Brands Details data:', householdBrandsDetailsResponse.data.error);
+            setHouseholdBrandsDetailsData([]);
+          }
+        } catch (apiError) {
+          console.error('🔍 API Error for Household Brands Details, using empty array:', apiError);
+          setHouseholdBrandsDetailsData([]);
+        }
+
     } catch (error) {
       console.error('Error fetching reports data:', error);
       // Set empty data on error
@@ -797,6 +886,7 @@ export default function Reports() {
       setFoodBrandsData([]);
       setFoodBrandsDetailsData([]);
       setHouseholdBrandsData(getHouseholdBrandsMockData());
+      setHouseholdBrandsDetailsData([]);
     } finally {
       setLoading(false);
     }
@@ -1180,6 +1270,47 @@ export default function Reports() {
     }
   };
 
+  const fetchHouseholdBrandsDetailsData = async () => {
+    setLoading(true);
+    try {
+      const filterParams = {
+        year: filters.selectedYear,
+        month: filters.selectedMonth,
+        businessArea: filters.selectedBusinessArea,
+        channel: filters.selectedChannel,
+        brand: filters.selectedBrand,
+        category: filters.selectedCategory,
+        subCategory: filters.selectedSubCategory,
+        customer: filters.selectedCustomer
+      };
+
+      console.log('🔍 Fetching Household Brands Details with params:', filterParams);
+      
+      // Try the real API call
+      try {
+        const householdBrandsDetailsResponse = await dashboardAPI.getHouseholdBrandsDetails(filterParams);
+        console.log('🔍 Household Brands Details API Response:', householdBrandsDetailsResponse.data);
+        
+        if (householdBrandsDetailsResponse.data.success && householdBrandsDetailsResponse.data.data && householdBrandsDetailsResponse.data.data.length > 0) {
+          console.log('🔍 Household Brands Details Data:', householdBrandsDetailsResponse.data.data);
+          setHouseholdBrandsDetailsData(householdBrandsDetailsResponse.data.data);
+        } else {
+          console.log('🔍 No real data for Household Brands Details, using empty array');
+          setHouseholdBrandsDetailsData([]);
+        }
+      } catch (apiError) {
+        console.error('🔍 API Error for Household Brands Details, using empty array:', apiError);
+        setHouseholdBrandsDetailsData([]);
+      }
+      
+    } catch (error) {
+      console.error('Error fetching household brands details data:', error);
+      setHouseholdBrandsDetailsData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleApplyFilters = () => {
     fetchData();
   };
@@ -1445,6 +1576,31 @@ export default function Reports() {
     } catch (error) {
       console.error('Error exporting Household Brands CSV:', error);
       alert('Failed to export Household Brands CSV. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportHouseholdBrandsDetailsCSV = async () => {
+    setExporting(true);
+    try {
+      // Generate CSV content from UI data
+      const csvContent = generateHouseholdBrandsDetailsTableCSV(householdBrandsDetailsData);
+      
+      // Create blob and download with BOM for Excel compatibility
+      const BOM = '\uFEFF';
+      const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `kinetica-household-brands-details-report-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error exporting Household Brands Details CSV:', error);
+      alert('Failed to export Household Brands Details CSV. Please try again.');
     } finally {
       setExporting(false);
     }
@@ -1800,6 +1956,45 @@ export default function Reports() {
           <div className="mt-6">
             <HouseholdBrandsTable 
               data={householdBrandsData}
+              isLoading={loading}
+            />
+          </div>
+        </CollapsibleSection>
+
+        {/* Household Brands Details Section */}
+        <CollapsibleSection title="Household Brands Details">
+          <SectionFilters
+            selectedYear={filters.selectedYear}
+            setSelectedYear={(year) => setFilters(prev => ({ ...prev, selectedYear: year }))}
+            selectedMonth={filters.selectedMonth}
+            setSelectedMonth={(month) => setFilters(prev => ({ ...prev, selectedMonth: month }))}
+            selectedBusinessArea={filters.selectedBusinessArea}
+            setSelectedBusinessArea={(area) => setFilters(prev => ({ ...prev, selectedBusinessArea: area }))}
+            selectedChannel={filters.selectedChannel}
+            setSelectedChannel={(channel) => setFilters(prev => ({ ...prev, selectedChannel: channel }))}
+            selectedBrand={filters.selectedBrand}
+            setSelectedBrand={(brand) => setFilters(prev => ({ ...prev, selectedBrand: brand }))}
+            selectedCategory={filters.selectedCategory}
+            setSelectedCategory={(category) => setFilters(prev => ({ ...prev, selectedCategory: category }))}
+            selectedSubCategory={filters.selectedSubCategory}
+            setSelectedSubCategory={(subCategory) => setFilters(prev => ({ ...prev, selectedSubCategory: subCategory }))}
+            selectedCustomer={filters.selectedCustomer}
+            setSelectedCustomer={(customer) => setFilters(prev => ({ ...prev, selectedCustomer: customer }))}
+            onApplyFilters={fetchHouseholdBrandsDetailsData}
+            onResetFilters={handleResetFilters}
+            onDownloadCSV={handleExportHouseholdBrandsDetailsCSV}
+            isDownloading={exporting}
+            sectionType="household-brands"
+            // Hide the filters we don't want for Household Brands Details
+            hideBusinessArea={true}
+            hideBrand={true}
+            hideCategory={true}
+            hideSubCategory={true}
+          />
+          
+          <div className="mt-6">
+            <HouseholdBrandsDetailsTable 
+              data={householdBrandsDetailsData}
               isLoading={loading}
             />
           </div>

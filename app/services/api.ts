@@ -334,6 +334,14 @@ export const dashboardAPI = {
         } 
       }),
 
+    getHouseholdBrandsDetails: (params?: any) => 
+      api.get('/dashboard/reports/household-brands-details', { 
+        params: { 
+          ...params, 
+          _t: Date.now() // Cache busting timestamp
+        } 
+      }),
+
   getTrendByMonthSummary: (params?: any) => 
     api.get('/dashboard/reports/trend-by-month', { 
       params: { 
