@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || `http://localhost:${process.env.NEXT_PUBLIC_API_PORT || 5000}/api/v1`,
+  baseURL: process.env.NEXT_PUBLIC_API_URL || `http://localhost:${process.env.NEXT_PUBLIC_API_PORT || 5002}/api/v1`,
   timeout: 60000, // Increased timeout to 60 seconds for trend calculations
   headers: {
     'Content-Type': 'application/json',
@@ -364,7 +364,7 @@ export const dashboardAPI = {
 // Health check
 export const healthAPI = {
   check: () => 
-    axios.get(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/health'),
+    axios.get(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002/health'),
 };
 
 export default api;

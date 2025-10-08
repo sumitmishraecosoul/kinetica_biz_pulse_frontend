@@ -31,19 +31,19 @@ export default function DashboardHeader() {
 
   return (
     <header className="shadow-sm" style={{ backgroundColor: '#0B2639' }}>
-      <div className="max-w-7xl mx-auto px-6 py-4">
+      <div className="w-full px-6 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-20">
+          <div className="flex items-center space-x-6 ml-8">
             <Link href="/" className="flex items-center space-x-8">
               <img src="/assets/ThriveLogo.svg" alt="Thrive Brands" className="h-14 w-auto" />
-              <div className="bg-green-100 rounded-lg p-2 w-48">
-                <img src="/assets/KineticaLogo.svg" alt="Kinetica Sports" className="h-12 w-full" />
-              </div>
+              <img src="/assets/Kiinetica_Sports_Logo_white.png" alt="Kinetica Sports" className="h-12 w-auto" />
             </Link>
-            <nav className="flex space-x-6 ml-12">
+          </div>
+          
+          <nav className="flex space-x-3 flex-1 justify-center">
               <Link 
                 href="/dashboard" 
-                className={`font-medium whitespace-nowrap pb-1 ${
+                className={`text-sm font-medium whitespace-nowrap pb-1 ${
                   isActiveTab('/dashboard') && pathname === '/dashboard'
                     ? 'text-white border-b-2 border-blue-400' 
                     : 'text-white hover:text-gray-200'
@@ -53,47 +53,47 @@ export default function DashboardHeader() {
               </Link>
               <Link 
                 href="/dashboard/business-analysis" 
-                className={`font-medium whitespace-nowrap pb-1 ${
+                className={`text-sm font-medium whitespace-nowrap pb-1 ${
                   pathname === '/dashboard/business-analysis'
                     ? 'text-white border-b-2 border-blue-400' 
                     : 'text-white hover:text-gray-200'
                 }`}
               >
-                Business Analysis
+                Business
               </Link>
               <Link 
                 href="/dashboard/customers" 
-                className={`font-medium whitespace-nowrap pb-1 ${
+                className={`text-sm font-medium whitespace-nowrap pb-1 ${
                   pathname === '/dashboard/customers'
                     ? 'text-white border-b-2 border-blue-400' 
                     : 'text-white hover:text-gray-200'
                 }`}
               >
-                Customer Analysis
+                Customer
               </Link>
               <Link 
                 href="/dashboard/brands" 
-                className={`font-medium whitespace-nowrap pb-1 ${
+                className={`text-sm font-medium whitespace-nowrap pb-1 ${
                   pathname === '/dashboard/brands'
                     ? 'text-white border-b-2 border-blue-400' 
                     : 'text-white hover:text-gray-200'
                 }`}
               >
-                Brand Analysis
+                Brand
               </Link>
               <Link 
                 href="/dashboard/categories" 
-                className={`font-medium whitespace-nowrap pb-1 ${
+                className={`text-sm font-medium whitespace-nowrap pb-1 ${
                   pathname === '/dashboard/categories'
                     ? 'text-white border-b-2 border-blue-400' 
                     : 'text-white hover:text-gray-200'
                 }`}
               >
-                Category Analysis
+                Category
               </Link>
               <Link 
                 href="/dashboard/reports" 
-                className={`font-medium whitespace-nowrap pb-1 ${
+                className={`text-sm font-medium whitespace-nowrap pb-1 ${
                   pathname === '/dashboard/reports'
                     ? 'text-white border-b-2 border-blue-200' 
                     : 'text-white hover:text-gray-200'
@@ -101,8 +101,8 @@ export default function DashboardHeader() {
               >
                 Reports
               </Link>
-            </nav>
-          </div>
+          </nav>
+          
           <div className="flex items-center space-x-4">
             <button className="w-8 h-8 flex items-center justify-center text-white hover:text-gray-200">
               <i className="ri-notification-line text-lg"></i>

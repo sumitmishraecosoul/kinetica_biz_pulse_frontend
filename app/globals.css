@@ -3,6 +3,71 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Dashboard Design System */
+:root {
+  --dashboard-navy: #0B2639;
+  --dashboard-navy-light: #1a3a4a;
+  --dashboard-blue: #3B82F6;
+  --dashboard-white: #ffffff;
+  --dashboard-gray: #64748b;
+  --dashboard-gray-light: #f1f5f9;
+  --dashboard-gray-dark: #475569;
+  --dashboard-border: #e2e8f0;
+  --chart-blue-2023: #3B82F6;
+  --chart-orange-2024: #F97316;
+  --chart-gray-2025: #6B7280;
+  --chart-line-blue: #3B82F6;
+  --chart-line-gray: #6B7280;
+  --chart-line-brown: #A78BFA;
+}
+
+/* Dashboard Header Styles */
+.dashboard-header {
+  background-color: var(--dashboard-navy);
+  color: var(--dashboard-white);
+}
+
+.dashboard-nav-active {
+  background-color: var(--dashboard-navy-light);
+  color: var(--dashboard-white);
+}
+
+.dashboard-nav-inactive {
+  color: var(--dashboard-gray);
+  transition: color 0.2s;
+}
+
+.dashboard-nav-inactive:hover {
+  color: var(--dashboard-white);
+}
+
+/* Dashboard Section Headers */
+.dashboard-section-header {
+  background-color: var(--dashboard-navy);
+  color: var(--dashboard-white);
+  border-radius: 8px 8px 0 0;
+}
+
+/* Dashboard Cards */
+.dashboard-card {
+  background-color: var(--dashboard-white);
+  border: 1px solid var(--dashboard-border);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Filter Dropdown Styles */
+.filter-dropdown {
+  background-color: var(--dashboard-white);
+  border: 1px solid var(--dashboard-border);
+  color: var(--dashboard-gray-dark);
+}
+
+.filter-dropdown:hover {
+  border-color: var(--dashboard-blue);
+  color: var(--dashboard-navy);
+}
+
 /* Remove all borders and outlines from Recharts components */
 .recharts-wrapper,
 .recharts-wrapper:focus,
@@ -22,6 +87,6 @@
 .chart-container:focus,
 .chart-container:active {
   outline: none !important;
-  border: 1px solid #e5e7eb !important;
+  border: 1px solid var(--dashboard-border) !important;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
 }
