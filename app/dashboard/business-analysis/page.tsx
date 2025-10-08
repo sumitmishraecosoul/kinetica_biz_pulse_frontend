@@ -60,14 +60,17 @@ export default function BusinessAnalysis() {
 
         // Check API health
         try {
-          const healthResponse = await fetch('http://localhost:5000/health');
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || `http://localhost:${process.env.NEXT_PUBLIC_API_PORT || 5002}/api/v1`;
+          const healthUrl = apiUrl.replace('/api/v1', '/health');
+          const healthResponse = await fetch(healthUrl);
           if (!healthResponse.ok) {
             console.error('API health check failed');
             setError('API server is not responding. Please check if the server is running.');
           }
         } catch (err) {
           console.error('API health check error:', err);
-          setError('Cannot connect to API server. Please check if the server is running on port 5000.');
+          const port = process.env.NEXT_PUBLIC_API_PORT || 5002;
+          setError(`Cannot connect to API server. Please check if the server is running on port ${port}.`);
         }
       }
     };
