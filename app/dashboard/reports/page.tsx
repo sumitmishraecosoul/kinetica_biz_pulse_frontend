@@ -682,249 +682,47 @@ export default function Reports() {
   const [foodBrandsDetailsData, setFoodBrandsDetailsData] = useState<any[]>([]);
   const [householdBrandsData, setHouseholdBrandsData] = useState<any[]>([]);
   const [householdBrandsDetailsData, setHouseholdBrandsDetailsData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  
+  // Individual loading states for each section
+  const [loadingStates, setLoadingStates] = useState({
+    summary: false,
+    totalBrands: false,
+    customers: false,
+    trend: false,
+    salesToFGP: false,
+    foodBrands: false,
+    foodBrandsDetails: false,
+    householdBrands: false,
+    householdBrandsDetails: false
+  });
+  
+  // Track which sections have been loaded
+  const [loadedSections, setLoadedSections] = useState<Set<string>>(new Set());
+  
   const [exporting, setExporting] = useState(false);
 
-  // Fetch reports summary data from Azure using new APIs
-  const fetchReportsData = async () => {
-    try {
-      console.log('Fetching reports data from Azure APIs...');
-      setLoading(true);
-      
-      const filterParams = {
-        year: filters.selectedYear !== 'All' ? parseInt(filters.selectedYear) : undefined,
-        month: filters.selectedMonth !== 'All' ? filters.selectedMonth : undefined,
-        businessArea: filters.selectedBusinessArea !== 'All' ? filters.selectedBusinessArea : undefined,
-        channel: filters.selectedChannel !== 'All' ? filters.selectedChannel : undefined,
-        customer: filters.selectedCustomer !== 'All' ? filters.selectedCustomer : undefined,
-        brand: filters.selectedBrand !== 'All' ? filters.selectedBrand : undefined,
-        category: filters.selectedCategory !== 'All' ? filters.selectedCategory : undefined,
-        subCategory: filters.selectedSubCategory !== 'All' ? filters.selectedSubCategory : undefined,
-        roiOnly: filters.selectedRoi === 'ROI',
-      };
-
-      // Debug: Log all filter parameters to ensure month is included
-      console.log('🔍 Filter params being sent:', JSON.stringify(filterParams, null, 2));
-      console.log('🔍 Current filter state:', JSON.stringify(filters, null, 2));
-
-      console.log('Filter params:', filterParams);
-      console.log('Current filter state:', filters);
-
-      // Fetch Business Area Summary
-      const businessAreaResponse = await dashboardAPI.getReportsBusinessAreaSummary(filterParams);
-      console.log('Business Area API Response:', businessAreaResponse.data);
-      console.log('Business Area Data Array:', businessAreaResponse.data.data);
-      console.log('Business Area Data Length:', businessAreaResponse.data.data?.length);
-      if (businessAreaResponse.data.data?.length > 0) {
-        console.log('First Business Area Row:', businessAreaResponse.data.data[0]);
-      }
-      setBusinessAreaData(businessAreaResponse.data.data || []);
-
-      // Fetch Channel Summary
-      const channelResponse = await dashboardAPI.getReportsChannelSummary(filterParams);
-      console.log('Channel API Response:', channelResponse.data);
-      console.log('Channel Data Array:', channelResponse.data.data);
-      console.log('Channel Data Length:', channelResponse.data.data?.length);
-      if (channelResponse.data.data?.length > 0) {
-        console.log('First Channel Row:', channelResponse.data.data[0]);
-      }
-      setChannelData(channelResponse.data.data || []);
-
-      // Fetch Total Brands data
-      console.log('Fetching Total Brands data...');
-      const brandsResponse = await dashboardAPI.getTotalBrandsSummary(filterParams);
-      if (brandsResponse.data.success) {
-        console.log('Total Brands API Response:', brandsResponse.data);
-        console.log('Total Brands Data Array:', brandsResponse.data.data);
-        console.log('Total Brands Data Length:', brandsResponse.data.data?.length);
-        if (brandsResponse.data.data && brandsResponse.data.data.length > 0) {
-          console.log('First Brand Row:', brandsResponse.data.data[0]);
-        }
-        setBrandsData(brandsResponse.data.data || []);
-      } else {
-        console.error('Failed to fetch Total Brands data:', brandsResponse.data.error);
-        setBrandsData([]);
-      }
-
-      // Fetch Customer Summary data
-      console.log('Fetching Customer Summary data...');
-      const customersResponse = await dashboardAPI.getCustomerSummary(filterParams);
-      if (customersResponse.data.success) {
-        console.log('Customer Summary API Response:', customersResponse.data);
-        console.log('Customer Summary Data Array:', customersResponse.data.data);
-        console.log('Customer Summary Data Length:', customersResponse.data.data?.length);
-        if (customersResponse.data.data && customersResponse.data.data.length > 0) {
-          console.log('First Customer Row:', customersResponse.data.data[0]);
-        }
-        setCustomersData(customersResponse.data.data || []);
-      } else {
-        console.error('Failed to fetch Customer Summary data:', customersResponse.data.error);
-        setCustomersData([]);
-      }
-
-      // Fetch Trend by Month data
-      console.log('Fetching Trend by Month data...');
-      const trendResponse = await dashboardAPI.getTrendByMonthSummary(filterParams);
-      if (trendResponse.data.success) {
-        console.log('Trend by Month API Response:', trendResponse.data);
-        console.log('Trend by Month Data Array:', trendResponse.data.data);
-        console.log('Trend by Month Data Length:', trendResponse.data.data?.length);
-        if (trendResponse.data.data && trendResponse.data.data.length > 0) {
-          console.log('First Trend Row:', trendResponse.data.data[0]);
-        }
-        setTrendData(trendResponse.data.data || []);
-      } else {
-        console.error('Failed to fetch Trend by Month data:', trendResponse.data.error);
-        setTrendData([]);
-      }
-
-      // Fetch Sales to fGP data
-      console.log('Fetching Sales to fGP data...');
-      const salesToFGPResponse = await dashboardAPI.getSalesToFGPSummary(filterParams);
-      if (salesToFGPResponse.data.success) {
-        console.log('Sales to fGP API Response:', salesToFGPResponse.data);
-        console.log('Sales to fGP Data Array:', salesToFGPResponse.data.data);
-        console.log('Sales to fGP Data Length:', salesToFGPResponse.data.data?.length);
-        if (salesToFGPResponse.data.data && salesToFGPResponse.data.data.length > 0) {
-          console.log('First Sales to fGP Row:', salesToFGPResponse.data.data[0]);
-        }
-        setSalesToFGPData(salesToFGPResponse.data.data || []);
-      } else {
-        console.error('Failed to fetch Sales to fGP data:', salesToFGPResponse.data.error);
-        setSalesToFGPData([]);
-      }
-
-        // Fetch Food Brands data
-        console.log('Fetching Food Brands data...');
-        const foodBrandsResponse = await dashboardAPI.getFoodBrandsSummary(filterParams);
-        if (foodBrandsResponse.data.success) {
-          console.log('Food Brands API Response:', foodBrandsResponse.data);
-          console.log('Food Brands Data Array:', foodBrandsResponse.data.data);
-          console.log('Food Brands Data Length:', foodBrandsResponse.data.data?.length);
-          if (foodBrandsResponse.data.data && foodBrandsResponse.data.data.length > 0) {
-            console.log('First Food Brands Row:', foodBrandsResponse.data.data[0]);
-          }
-          setFoodBrandsData(foodBrandsResponse.data.data || []);
-        } else {
-          console.error('Failed to fetch Food Brands data:', foodBrandsResponse.data.error);
-          setFoodBrandsData([]);
-        }
-
-        // Fetch Food Brands Details data
-        console.log('Fetching Food Brands Details data...');
-        const foodBrandsDetailsResponse = await dashboardAPI.getFoodBrandsDetails(filterParams);
-        if (foodBrandsDetailsResponse.data.success) {
-          console.log('Food Brands Details API Response:', foodBrandsDetailsResponse.data);
-          console.log('Food Brands Details Data Array:', foodBrandsDetailsResponse.data.data);
-          console.log('Food Brands Details Data Length:', foodBrandsDetailsResponse.data.data?.length);
-          if (foodBrandsDetailsResponse.data.data && foodBrandsDetailsResponse.data.data.length > 0) {
-            console.log('First Food Brands Details Row:', foodBrandsDetailsResponse.data.data[0]);
-          }
-          setFoodBrandsDetailsData(foodBrandsDetailsResponse.data.data || []);
-        } else {
-          console.error('Failed to fetch Food Brands Details data:', foodBrandsDetailsResponse.data.error);
-          setFoodBrandsDetailsData([]);
-        }
-
-        // Fetch Household Brands data
-        console.log('Fetching Household Brands data...');
-        try {
-          const householdBrandsResponse = await dashboardAPI.getHouseholdBrands(filterParams);
-          if (householdBrandsResponse.data.success) {
-            console.log('Household Brands API Response:', householdBrandsResponse.data);
-            console.log('Household Brands Data Array:', householdBrandsResponse.data.data);
-            console.log('Household Brands Data Length:', householdBrandsResponse.data.data?.length);
-            if (householdBrandsResponse.data.data && householdBrandsResponse.data.data.length > 0) {
-              console.log('First Household Brands Row:', householdBrandsResponse.data.data[0]);
-              setHouseholdBrandsData(householdBrandsResponse.data.data);
-            } else {
-              console.log('🔍 No real data, using mock data');
-              setHouseholdBrandsData(getHouseholdBrandsMockData());
-            }
-          } else {
-            console.error('Failed to fetch Household Brands data:', householdBrandsResponse.data.error);
-            setHouseholdBrandsData(getHouseholdBrandsMockData());
-          }
-        } catch (apiError) {
-          console.error('🔍 API Error, using mock data:', apiError);
-          setHouseholdBrandsData(getHouseholdBrandsMockData());
-        }
-
-        // Fetch Household Brands Details data
-        console.log('Fetching Household Brands Details data...');
-        try {
-          const householdBrandsDetailsResponse = await dashboardAPI.getHouseholdBrandsDetails(filterParams);
-          if (householdBrandsDetailsResponse.data.success) {
-            console.log('Household Brands Details API Response:', householdBrandsDetailsResponse.data);
-            console.log('Household Brands Details Data Array:', householdBrandsDetailsResponse.data.data);
-            console.log('Household Brands Details Data Length:', householdBrandsDetailsResponse.data.data?.length);
-            if (householdBrandsDetailsResponse.data.data && householdBrandsDetailsResponse.data.data.length > 0) {
-              console.log('First Household Brands Details Row:', householdBrandsDetailsResponse.data.data[0]);
-              setHouseholdBrandsDetailsData(householdBrandsDetailsResponse.data.data);
-            } else {
-              console.log('🔍 No real data for Household Brands Details, using empty array');
-              setHouseholdBrandsDetailsData([]);
-            }
-          } else {
-            console.error('Failed to fetch Household Brands Details data:', householdBrandsDetailsResponse.data.error);
-            setHouseholdBrandsDetailsData([]);
-          }
-        } catch (apiError) {
-          console.error('🔍 API Error for Household Brands Details, using empty array:', apiError);
-          setHouseholdBrandsDetailsData([]);
-        }
-
-    } catch (error) {
-      console.error('Error fetching reports data:', error);
-      // Set empty data on error
-      setBusinessAreaData([]);
-      setChannelData([]);
-      setBrandsData([]);
-      setCustomersData([]);
-      setTrendData([]);
-      setSalesToFGPData([]);
-      setFoodBrandsData([]);
-      setFoodBrandsDetailsData([]);
-      setHouseholdBrandsData(getHouseholdBrandsMockData());
-      setHouseholdBrandsDetailsData([]);
-    } finally {
-      setLoading(false);
-    }
+  // Helper function to get filter params
+  const getFilterParams = () => {
+    return {
+      year: filters.selectedYear !== 'All' ? parseInt(filters.selectedYear) : undefined,
+      month: filters.selectedMonth !== 'All' ? filters.selectedMonth : undefined,
+      businessArea: filters.selectedBusinessArea !== 'All' ? filters.selectedBusinessArea : undefined,
+      channel: filters.selectedChannel !== 'All' ? filters.selectedChannel : undefined,
+      customer: filters.selectedCustomer !== 'All' ? filters.selectedCustomer : undefined,
+      brand: filters.selectedBrand !== 'All' ? filters.selectedBrand : undefined,
+      category: filters.selectedCategory !== 'All' ? filters.selectedCategory : undefined,
+      subCategory: filters.selectedSubCategory !== 'All' ? filters.selectedSubCategory : undefined,
+      roiOnly: filters.selectedRoi === 'ROI',
+    };
   };
 
-  // Fetch data when filters change
-  const fetchData = async () => {
-    try {
-      await fetchReportsData();
-    } catch (error) {
-      console.error('Error fetching reports data:', error);
-    }
-  };
-
-  // Initial data fetch
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  // Refetch data when filters change - removed to prevent conflicts
-  // useEffect(() => {
-  //   fetchData();
-  // }, [filters]);
+  // No initial fetch - data loads when sections are expanded
 
   // Individual data fetching functions for each section
   const fetchSummaryData = async () => {
-    setLoading(true);
+    setLoadingStates(prev => ({ ...prev, summary: true }));
     try {
-      const filterParams = {
-        year: filters.selectedYear,
-        month: filters.selectedMonth,
-        businessArea: filters.selectedBusinessArea,
-        channel: filters.selectedChannel,
-        brand: filters.selectedBrand,
-        category: filters.selectedCategory,
-        subCategory: filters.selectedSubCategory,
-        customer: filters.selectedCustomer
-      };
+      const filterParams = getFilterParams();
 
       const [businessAreaResponse, channelResponse] = await Promise.all([
         dashboardAPI.getReportsBusinessAreaSummary(filterParams),
@@ -937,382 +735,205 @@ export default function Reports() {
       if (channelResponse.data.success) {
         setChannelData(channelResponse.data.data || []);
       }
+      
+      setLoadedSections(prev => new Set(prev).add('summary'));
     } catch (error) {
       console.error('Error fetching summary data:', error);
     } finally {
-      setLoading(false);
+      setLoadingStates(prev => ({ ...prev, summary: false }));
     }
   };
 
   const fetchCustomersData = async () => {
-    setLoading(true);
+    setLoadingStates(prev => ({ ...prev, customers: true }));
     try {
-      const filterParams = {
-        year: filters.selectedYear,
-        month: filters.selectedMonth,
-        businessArea: filters.selectedBusinessArea,
-        channel: filters.selectedChannel,
-        brand: filters.selectedBrand,
-        category: filters.selectedCategory,
-        subCategory: filters.selectedSubCategory,
-        customer: filters.selectedCustomer
-      };
+      const filterParams = getFilterParams();
 
       const customersResponse = await dashboardAPI.getCustomerSummary(filterParams);
       if (customersResponse.data.success) {
         setCustomersData(customersResponse.data.data || []);
       }
+      
+      setLoadedSections(prev => new Set(prev).add('customers'));
     } catch (error) {
       console.error('Error fetching customers data:', error);
     } finally {
-      setLoading(false);
+      setLoadingStates(prev => ({ ...prev, customers: false }));
     }
   };
 
   const fetchTrendData = async () => {
-    setLoading(true);
+    setLoadingStates(prev => ({ ...prev, trend: true }));
     try {
-      const filterParams = {
-        year: filters.selectedYear,
-        month: filters.selectedMonth,
-        businessArea: filters.selectedBusinessArea,
-        channel: filters.selectedChannel,
-        brand: filters.selectedBrand,
-        category: filters.selectedCategory,
-        subCategory: filters.selectedSubCategory,
-        customer: filters.selectedCustomer
-      };
+      const filterParams = getFilterParams();
 
       const trendResponse = await dashboardAPI.getTrendByMonthSummary(filterParams);
       if (trendResponse.data.success) {
         setTrendData(trendResponse.data.data || []);
       }
+      
+      setLoadedSections(prev => new Set(prev).add('trend'));
     } catch (error) {
       console.error('Error fetching trend data:', error);
     } finally {
-      setLoading(false);
+      setLoadingStates(prev => ({ ...prev, trend: false }));
     }
   };
 
   const fetchSalesToFGPData = async () => {
-    setLoading(true);
+    setLoadingStates(prev => ({ ...prev, salesToFGP: true }));
     try {
-      const filterParams = {
-        year: filters.selectedYear,
-        month: filters.selectedMonth,
-        businessArea: filters.selectedBusinessArea,
-        channel: filters.selectedChannel,
-        brand: filters.selectedBrand,
-        category: filters.selectedCategory,
-        subCategory: filters.selectedSubCategory,
-        customer: filters.selectedCustomer
-      };
+      const filterParams = getFilterParams();
 
       const salesToFGPResponse = await dashboardAPI.getSalesToFGPSummary(filterParams);
       if (salesToFGPResponse.data.success) {
         setSalesToFGPData(salesToFGPResponse.data.data || []);
       }
+      
+      setLoadedSections(prev => new Set(prev).add('salesToFGP'));
     } catch (error) {
       console.error('Error fetching sales to FGP data:', error);
     } finally {
-      setLoading(false);
+      setLoadingStates(prev => ({ ...prev, salesToFGP: false }));
     }
   };
 
   const fetchFoodBrandsData = async () => {
-    setLoading(true);
+    setLoadingStates(prev => ({ ...prev, foodBrands: true }));
     try {
-      const filterParams = {
-        year: filters.selectedYear,
-        month: filters.selectedMonth,
-        businessArea: filters.selectedBusinessArea,
-        channel: filters.selectedChannel,
-        brand: filters.selectedBrand,
-        category: filters.selectedCategory,
-        subCategory: filters.selectedSubCategory,
-        customer: filters.selectedCustomer
-      };
+      const filterParams = getFilterParams();
 
       const foodBrandsResponse = await dashboardAPI.getFoodBrandsSummary(filterParams);
       if (foodBrandsResponse.data.success) {
         setFoodBrandsData(foodBrandsResponse.data.data || []);
       }
+      
+      setLoadedSections(prev => new Set(prev).add('foodBrands'));
     } catch (error) {
       console.error('Error fetching food brands data:', error);
     } finally {
-      setLoading(false);
+      setLoadingStates(prev => ({ ...prev, foodBrands: false }));
     }
   };
 
   const fetchFoodBrandsDetailsData = async () => {
-    setLoading(true);
+    setLoadingStates(prev => ({ ...prev, foodBrandsDetails: true }));
     try {
-      const filterParams = {
-        year: filters.selectedYear,
-        month: filters.selectedMonth,
-        businessArea: filters.selectedBusinessArea,
-        channel: filters.selectedChannel,
-        brand: filters.selectedBrand,
-        category: filters.selectedCategory,
-        subCategory: filters.selectedSubCategory,
-        customer: filters.selectedCustomer
-      };
-
-      console.log('🔍 Fetching Food Brands Details with params:', filterParams);
+      const filterParams = getFilterParams();
       
-      // Add mock data for testing
-      const mockData = [
-        {
-          brand: 'McDonnells',
-          subCategory: 'Curry',
-          product: 'Original Curry',
-          cases: { ytd: 1500, lyVar: -100, lyVarPercent: -6.3 },
-          gSales: { ytd: 45000, lyVar: -3000, lyVarPercent: -6.3 },
-          fGP: { ytd: 18000, lyVar: -1200, lyVarPercent: -6.3 },
-          fGPPercent: { ytd: 40.0, lyVar: 0.0 }
-        },
-        {
-          brand: 'McDonnells',
-          subCategory: 'Curry',
-          product: 'Gluten Free curry',
-          cases: { ytd: 800, lyVar: 50, lyVarPercent: 6.7 },
-          gSales: { ytd: 24000, lyVar: 1500, lyVarPercent: 6.7 },
-          fGP: { ytd: 9600, lyVar: 600, lyVarPercent: 6.7 },
-          fGPPercent: { ytd: 40.0, lyVar: 0.0 }
-        },
-        {
-          brand: 'Chivers',
-          subCategory: 'Preserves',
-          product: 'Marmalade',
-          cases: { ytd: 1200, lyVar: 100, lyVarPercent: 9.1 },
-          gSales: { ytd: 36000, lyVar: 3000, lyVarPercent: 9.1 },
-          fGP: { ytd: 14400, lyVar: 1200, lyVarPercent: 9.1 },
-          fGPPercent: { ytd: 40.0, lyVar: 0.0 }
-        }
-      ];
+      const foodBrandsDetailsResponse = await dashboardAPI.getFoodBrandsDetails(filterParams);
       
-      setFoodBrandsDetailsData(mockData);
-      
-      // Try the real API call
-      try {
-        const foodBrandsDetailsResponse = await dashboardAPI.getFoodBrandsDetails(filterParams);
-        console.log('🔍 Food Brands Details API Response:', foodBrandsDetailsResponse.data);
-        
-        if (foodBrandsDetailsResponse.data.success && foodBrandsDetailsResponse.data.data && foodBrandsDetailsResponse.data.data.length > 0) {
-          console.log('🔍 Food Brands Details Data:', foodBrandsDetailsResponse.data.data);
-          setFoodBrandsDetailsData(foodBrandsDetailsResponse.data.data);
-        } else {
-          console.log('🔍 No real data, using mock data');
-        }
-      } catch (apiError) {
-        console.error('🔍 API Error, using mock data:', apiError);
+      if (foodBrandsDetailsResponse.data.success && foodBrandsDetailsResponse.data.data && foodBrandsDetailsResponse.data.data.length > 0) {
+        setFoodBrandsDetailsData(foodBrandsDetailsResponse.data.data);
+      } else {
+        setFoodBrandsDetailsData([]);
       }
       
+      setLoadedSections(prev => new Set(prev).add('foodBrandsDetails'));
     } catch (error) {
       console.error('Error fetching food brands details data:', error);
       setFoodBrandsDetailsData([]);
     } finally {
-      setLoading(false);
+      setLoadingStates(prev => ({ ...prev, foodBrandsDetails: false }));
     }
   };
 
   const fetchHouseholdBrandsData = async () => {
-    setLoading(true);
+    setLoadingStates(prev => ({ ...prev, householdBrands: true }));
     try {
-      const filterParams = {
-        year: filters.selectedYear,
-        month: filters.selectedMonth,
-        businessArea: filters.selectedBusinessArea,
-        channel: filters.selectedChannel,
-        brand: filters.selectedBrand,
-        category: filters.selectedCategory,
-        subCategory: filters.selectedSubCategory,
-        customer: filters.selectedCustomer
-      };
-
-      console.log('🔍 Fetching Household Brands with params:', filterParams);
+      const filterParams = getFilterParams();
       
-      // Add mock data for testing based on the screenshot
-      const mockData = [
-        // BV Brands - Household
-        {
-          name: 'Killeen',
-          cases: { ytd: 265564, lyVar: 5184, lyVarPercent: 2.0 },
-          gSales: { ytd: 5452, lyVar: 49, lyVarPercent: 0.9 },
-          fGP: { ytd: 1974, lyVar: -10, lyVarPercent: -0.5 },
-          fGPPercent: { ytd: 36.2, lyVar: -0.5 },
-          fGPFY24: { ytd: 1984, cyVLy: 99.5 }
-        },
-        {
-          name: 'Green Aware',
-          cases: { ytd: 51604, lyVar: 1673, lyVarPercent: 3.4 },
-          gSales: { ytd: 2771, lyVar: 514, lyVarPercent: 22.8 },
-          fGP: { ytd: 956, lyVar: 152, lyVarPercent: 18.9 },
-          fGPPercent: { ytd: 34.5, lyVar: -1.1 },
-          fGPFY24: { ytd: 804, cyVLy: 118.9 }
-        },
-        {
-          name: 'Goddards',
-          cases: { ytd: 44546, lyVar: -13129, lyVarPercent: -22.8 },
-          gSales: { ytd: 437, lyVar: -159, lyVarPercent: -26.7 },
-          fGP: { ytd: 111, lyVar: -59, lyVarPercent: -34.7 },
-          fGPPercent: { ytd: 25.5, lyVar: -3.1 },
-          fGPFY24: { ytd: 171, cyVLy: 65.3 }
-        },
-        {
-          name: 'Irish Breeze',
-          cases: { ytd: 9916, lyVar: 595, lyVarPercent: 6.4 },
-          gSales: { ytd: 260, lyVar: 13, lyVarPercent: 5.5 },
-          fGP: { ytd: 92, lyVar: 14, lyVarPercent: 18.7 },
-          fGPPercent: { ytd: 35.4, lyVar: 3.9 },
-          fGPFY24: { ytd: 77, cyVLy: 118.7 }
-        },
-        {
-          name: 'Babykind',
-          cases: { ytd: 498, lyVar: -1163, lyVarPercent: -70.0 },
-          gSales: { ytd: 9, lyVar: -40, lyVarPercent: -82.2 },
-          fGP: { ytd: 3, lyVar: -8, lyVarPercent: -74.5 },
-          fGPPercent: { ytd: 31.4, lyVar: 9.5 },
-          fGPFY24: { ytd: 11, cyVLy: 25.5 }
-        },
-        {
-          name: 'BV Brands - Household Total',
-          cases: { ytd: 372128, lyVar: -6840, lyVarPercent: -1.8 },
-          gSales: { ytd: 8928, lyVar: 377, lyVarPercent: 4.4 },
-          fGP: { ytd: 3136, lyVar: 89, lyVarPercent: 2.9 },
-          fGPPercent: { ytd: 35.1, lyVar: -0.5 },
-          fGPFY24: { ytd: 3047, cyVLy: 102.9 },
-          isTotal: true
-        },
-        // PL Brands - Household
-        {
-          name: 'Alio',
-          cases: { ytd: 0, lyVar: 0, lyVarPercent: 0 },
-          gSales: { ytd: 0, lyVar: 0, lyVarPercent: 0 },
-          fGP: { ytd: 0, lyVar: 0, lyVarPercent: 0 },
-          fGPPercent: { ytd: 0, lyVar: 0 },
-          fGPFY24: { ytd: 0, cyVLy: 0 }
-        },
-        {
-          name: 'Centra',
-          cases: { ytd: 17973, lyVar: 749, lyVarPercent: 4.3 },
-          gSales: { ytd: 219, lyVar: -2, lyVarPercent: -1.1 },
-          fGP: { ytd: 38, lyVar: -5, lyVarPercent: -11.2 },
-          fGPPercent: { ytd: 17.1, lyVar: -2.0 },
-          fGPFY24: { ytd: 42, cyVLy: 88.8 }
-        },
-        {
-          name: 'PL Minor',
-          cases: { ytd: 4243, lyVar: -1228, lyVarPercent: -22.4 },
-          gSales: { ytd: 73, lyVar: -26, lyVarPercent: -26.4 },
-          fGP: { ytd: 21, lyVar: -10, lyVarPercent: -32.7 },
-          fGPPercent: { ytd: 29.5, lyVar: -2.8 },
-          fGPFY24: { ytd: 32, cyVLy: 67.3 }
-        },
-        {
-          name: 'SuperValu',
-          cases: { ytd: 63034, lyVar: -4622, lyVarPercent: -6.8 },
-          gSales: { ytd: 803, lyVar: -80, lyVarPercent: -9.1 },
-          fGP: { ytd: 136, lyVar: -39, lyVarPercent: -22.3 },
-          fGPPercent: { ytd: 16.9, lyVar: -2.9 },
-          fGPFY24: { ytd: 175, cyVLy: 77.7 }
-        },
-        {
-          name: 'Powerforce',
-          cases: { ytd: 188228, lyVar: 62525, lyVarPercent: 49.7 },
-          gSales: { ytd: 2738, lyVar: 751, lyVarPercent: 37.8 },
-          fGP: { ytd: 727, lyVar: 270, lyVarPercent: 59.1 },
-          fGPPercent: { ytd: 26.5, lyVar: 3.6 },
-          fGPFY24: { ytd: 457, cyVLy: 159.1 }
-        },
-        {
-          name: 'PL Brands - Household Total',
-          cases: { ytd: 273478, lyVar: 57424, lyVarPercent: 26.6 },
-          gSales: { ytd: 3832, lyVar: 643, lyVarPercent: 20.1 },
-          fGP: { ytd: 922, lyVar: 216, lyVarPercent: 30.6 },
-          fGPPercent: { ytd: 24.1, lyVar: 1.9 },
-          fGPFY24: { ytd: 706, cyVLy: 130.6 },
-          isTotal: true
-        },
-        {
-          name: 'Overall Total',
-          cases: { ytd: 645606, lyVar: 50584, lyVarPercent: 8.5 },
-          gSales: { ytd: 12760, lyVar: 1020, lyVarPercent: 8.7 },
-          fGP: { ytd: 4058, lyVar: 305, lyVarPercent: 8.1 },
-          fGPPercent: { ytd: 31.8, lyVar: -0.2 },
-          fGPFY24: { ytd: 3752, cyVLy: 108.1 },
-          isTotal: true
-        }
-      ];
-      
-      setHouseholdBrandsData(mockData);
-      
-      // Try the real API call
-      try {
-        const householdBrandsResponse = await dashboardAPI.getHouseholdBrands(filterParams);
-        console.log('🔍 Household Brands API Response:', householdBrandsResponse.data);
+      const householdBrandsResponse = await dashboardAPI.getHouseholdBrands(filterParams);
         
-        if (householdBrandsResponse.data.success && householdBrandsResponse.data.data && householdBrandsResponse.data.data.length > 0) {
-          console.log('🔍 Household Brands Data:', householdBrandsResponse.data.data);
-          setHouseholdBrandsData(householdBrandsResponse.data.data);
-        } else {
-          console.log('🔍 No real data, using mock data');
-        }
-      } catch (apiError) {
-        console.error('🔍 API Error, using mock data:', apiError);
+      if (householdBrandsResponse.data.success && householdBrandsResponse.data.data && householdBrandsResponse.data.data.length > 0) {
+        setHouseholdBrandsData(householdBrandsResponse.data.data);
+      } else {
+        setHouseholdBrandsData(getHouseholdBrandsMockData());
       }
       
+      setLoadedSections(prev => new Set(prev).add('householdBrands'));
     } catch (error) {
       console.error('Error fetching household brands data:', error);
-      setHouseholdBrandsData([]);
+      setHouseholdBrandsData(getHouseholdBrandsMockData());
     } finally {
-      setLoading(false);
+      setLoadingStates(prev => ({ ...prev, householdBrands: false }));
     }
   };
 
   const fetchHouseholdBrandsDetailsData = async () => {
-    setLoading(true);
+    setLoadingStates(prev => ({ ...prev, householdBrandsDetails: true }));
     try {
-      const filterParams = {
-        year: filters.selectedYear,
-        month: filters.selectedMonth,
-        businessArea: filters.selectedBusinessArea,
-        channel: filters.selectedChannel,
-        brand: filters.selectedBrand,
-        category: filters.selectedCategory,
-        subCategory: filters.selectedSubCategory,
-        customer: filters.selectedCustomer
-      };
-
-      console.log('🔍 Fetching Household Brands Details with params:', filterParams);
+      const filterParams = getFilterParams();
       
-      // Try the real API call
-      try {
-        const householdBrandsDetailsResponse = await dashboardAPI.getHouseholdBrandsDetails(filterParams);
-        console.log('🔍 Household Brands Details API Response:', householdBrandsDetailsResponse.data);
+      const householdBrandsDetailsResponse = await dashboardAPI.getHouseholdBrandsDetails(filterParams);
         
-        if (householdBrandsDetailsResponse.data.success && householdBrandsDetailsResponse.data.data && householdBrandsDetailsResponse.data.data.length > 0) {
-          console.log('🔍 Household Brands Details Data:', householdBrandsDetailsResponse.data.data);
-          setHouseholdBrandsDetailsData(householdBrandsDetailsResponse.data.data);
-        } else {
-          console.log('🔍 No real data for Household Brands Details, using empty array');
-          setHouseholdBrandsDetailsData([]);
-        }
-      } catch (apiError) {
-        console.error('🔍 API Error for Household Brands Details, using empty array:', apiError);
+      if (householdBrandsDetailsResponse.data.success && householdBrandsDetailsResponse.data.data && householdBrandsDetailsResponse.data.data.length > 0) {
+        setHouseholdBrandsDetailsData(householdBrandsDetailsResponse.data.data);
+      } else {
         setHouseholdBrandsDetailsData([]);
       }
       
+      setLoadedSections(prev => new Set(prev).add('householdBrandsDetails'));
     } catch (error) {
       console.error('Error fetching household brands details data:', error);
       setHouseholdBrandsDetailsData([]);
     } finally {
-      setLoading(false);
+      setLoadingStates(prev => ({ ...prev, householdBrandsDetails: false }));
     }
   };
 
-  const handleApplyFilters = () => {
-    fetchData();
+  // Add Total Brands fetch function
+  const fetchTotalBrandsData = async () => {
+    setLoadingStates(prev => ({ ...prev, totalBrands: true }));
+    try {
+      const filterParams = getFilterParams();
+
+      const brandsResponse = await dashboardAPI.getTotalBrandsSummary(filterParams);
+      if (brandsResponse.data.success) {
+        setBrandsData(brandsResponse.data.data || []);
+      }
+      
+      setLoadedSections(prev => new Set(prev).add('totalBrands'));
+    } catch (error) {
+      console.error('Error fetching total brands data:', error);
+    } finally {
+      setLoadingStates(prev => ({ ...prev, totalBrands: false }));
+    }
+  };
+
+  // Handle section expansion - fetch data when section is opened for the first time
+  const handleSectionExpand = (sectionName: string, isExpanded: boolean) => {
+    if (isExpanded && !loadedSections.has(sectionName)) {
+      switch (sectionName) {
+        case 'summary':
+          fetchSummaryData();
+          break;
+        case 'totalBrands':
+          fetchTotalBrandsData();
+          break;
+        case 'customers':
+          fetchCustomersData();
+          break;
+        case 'trend':
+          fetchTrendData();
+          break;
+        case 'salesToFGP':
+          fetchSalesToFGPData();
+          break;
+        case 'foodBrands':
+          fetchFoodBrandsData();
+          break;
+        case 'foodBrandsDetails':
+          fetchFoodBrandsDetailsData();
+          break;
+        case 'householdBrands':
+          fetchHouseholdBrandsData();
+          break;
+        case 'householdBrandsDetails':
+          fetchHouseholdBrandsDetailsData();
+          break;
+      }
+    }
   };
 
   const handleResetFilters = () => {
@@ -1652,6 +1273,7 @@ export default function Reports() {
           <CollapsibleSection 
             title="Summary" 
             defaultExpanded={true}
+            onToggle={(isExpanded) => handleSectionExpand('summary', isExpanded)}
           >
             <SectionFilters
               selectedYear={filters.selectedYear}
@@ -1681,20 +1303,23 @@ export default function Reports() {
               <SummaryTable 
                 title="Business Area" 
                 data={businessAreaData} 
-                loading={loading}
+                loading={loadingStates.summary}
                 periodLabel={filters.selectedMonth !== 'All' ? filters.selectedMonth : 'YTD'}
               />
               <SummaryTable 
                 title="Channel" 
                 data={channelData} 
-                loading={loading}
+                loading={loadingStates.summary}
                 periodLabel={filters.selectedMonth !== 'All' ? filters.selectedMonth : 'YTD'}
               />
             </div>
           </CollapsibleSection>
 
           {/* Total Brands Section */}
-          <CollapsibleSection title="Total Brands">
+          <CollapsibleSection 
+            title="Total Brands"
+            onToggle={(isExpanded) => handleSectionExpand('totalBrands', isExpanded)}
+          >
             <TotalBrandsFilters
               selectedYear={filters.selectedYear}
               setSelectedYear={(year) => setFilters(prev => ({ ...prev, selectedYear: year }))}
@@ -1710,7 +1335,7 @@ export default function Reports() {
               setSelectedCustomer={(customer) => setFilters(prev => ({ ...prev, selectedCustomer: customer }))}
               selectedRoi={filters.selectedRoi}
               setSelectedRoi={(roi) => setFilters(prev => ({ ...prev, selectedRoi: roi }))}
-              onApplyFilters={fetchSummaryData}
+              onApplyFilters={fetchTotalBrandsData}
               onResetFilters={handleResetFilters}
               onDownloadCSV={handleExportTotalBrandsCSV}
               isDownloading={exporting}
@@ -1718,20 +1343,20 @@ export default function Reports() {
             />
             
             <div className="mt-6">
-              <div className="mb-4 p-2 bg-gray-100 rounded text-sm">
-                Debug: Brands Data length = {brandsData.length}, Loading = {loading.toString()}, ROI = {filters.selectedRoi}
-              </div>
               <SummaryTable 
                 data={brandsData}
                 title="Brand Name"
-                loading={loading}
+                loading={loadingStates.totalBrands}
                 periodLabel={filters.selectedMonth !== 'All' ? filters.selectedMonth : 'YTD'}
               />
             </div>
           </CollapsibleSection>
 
           {/* Customers Section */}
-          <CollapsibleSection title="Customers">
+          <CollapsibleSection 
+            title="Customers"
+            onToggle={(isExpanded) => handleSectionExpand('customers', isExpanded)}
+          >
             <CustomerFilters
               selectedYear={filters.selectedYear}
               setSelectedYear={(year) => setFilters(prev => ({ ...prev, selectedYear: year }))}
@@ -1752,20 +1377,20 @@ export default function Reports() {
             />
             
             <div className="mt-6">
-              <div className="mb-4 p-2 bg-gray-100 rounded text-sm">
-                Debug: Customers Data length = {customersData.length}, Loading = {loading.toString()}
-              </div>
               <SummaryTable 
                 data={customersData}
                 title="Customer Name"
-                loading={loading}
+                loading={loadingStates.customers}
                 periodLabel={filters.selectedMonth !== 'All' ? filters.selectedMonth : 'YTD'}
               />
             </div>
           </CollapsibleSection>
 
           {/* Trend Section */}
-          <CollapsibleSection title="Trend by Month">
+          <CollapsibleSection 
+            title="Trend by Month"
+            onToggle={(isExpanded) => handleSectionExpand('trend', isExpanded)}
+          >
             <SectionFilters
               selectedYear={filters.selectedYear}
               setSelectedYear={(year) => setFilters(prev => ({ ...prev, selectedYear: year }))}
@@ -1791,20 +1416,20 @@ export default function Reports() {
             />
             
             <div className="mt-6">
-              <div className="mb-4 p-2 bg-gray-100 rounded text-sm">
-                Debug: Trend Data length = {trendData.length}, Loading = {loading.toString()}
-              </div>
               <TrendTable 
                 data={trendData}
                 title="Trend by Month"
-                loading={loading}
+                loading={loadingStates.trend}
                 periodLabel={filters.selectedMonth !== 'All' ? filters.selectedMonth : 'YTD'}
               />
             </div>
           </CollapsibleSection>
 
           {/* Sales to FGP Section */}
-          <CollapsibleSection title="Sales to FGP">
+          <CollapsibleSection 
+            title="Sales to FGP"
+            onToggle={(isExpanded) => handleSectionExpand('salesToFGP', isExpanded)}
+          >
             <SectionFilters
               selectedYear={filters.selectedYear}
               setSelectedYear={(year) => setFilters(prev => ({ ...prev, selectedYear: year }))}
@@ -1830,13 +1455,10 @@ export default function Reports() {
             />
             
             <div className="mt-6">
-              <div className="mb-4 p-2 bg-gray-100 rounded text-sm">
-                Debug: Sales to fGP Data length = {salesToFGPData.length}, Loading = {loading.toString()}
-              </div>
               <SalesToFGPTable 
                 data={salesToFGPData}
                 title="Sales to fGP"
-                loading={loading}
+                loading={loadingStates.salesToFGP}
                 periodLabel={filters.selectedMonth !== 'All' ? filters.selectedMonth : 'YTD'}
                 currentYear={parseInt(filters.selectedYear)}
                 previousYear={parseInt(filters.selectedYear) - 1}
@@ -1845,7 +1467,10 @@ export default function Reports() {
           </CollapsibleSection>
 
         {/* Food Brands Section */}
-        <CollapsibleSection title="Food Brands">
+        <CollapsibleSection 
+          title="Food Brands"
+          onToggle={(isExpanded) => handleSectionExpand('foodBrands', isExpanded)}
+        >
           <SectionFilters
             selectedYear={filters.selectedYear}
             setSelectedYear={(year) => setFilters(prev => ({ ...prev, selectedYear: year }))}
@@ -1878,13 +1503,16 @@ export default function Reports() {
           <div className="mt-6">
             <FoodBrandsTable 
               data={foodBrandsData}
-              isLoading={loading}
+              isLoading={loadingStates.foodBrands}
             />
           </div>
         </CollapsibleSection>
 
         {/* Food Brands Details Section */}
-        <CollapsibleSection title="Food Brands Details">
+        <CollapsibleSection 
+          title="Food Brands Details"
+          onToggle={(isExpanded) => handleSectionExpand('foodBrandsDetails', isExpanded)}
+        >
           <SectionFilters
             selectedYear={filters.selectedYear}
             setSelectedYear={(year) => setFilters(prev => ({ ...prev, selectedYear: year }))}
@@ -1917,13 +1545,16 @@ export default function Reports() {
           <div className="mt-6">
             <FoodBrandsDetailsTable 
               data={foodBrandsDetailsData}
-              isLoading={loading}
+              isLoading={loadingStates.foodBrandsDetails}
             />
           </div>
         </CollapsibleSection>
 
         {/* Household Brands Section */}
-        <CollapsibleSection title="Household Brands">
+        <CollapsibleSection 
+          title="Household Brands"
+          onToggle={(isExpanded) => handleSectionExpand('householdBrands', isExpanded)}
+        >
           <SectionFilters
             selectedYear={filters.selectedYear}
             setSelectedYear={(year) => setFilters(prev => ({ ...prev, selectedYear: year }))}
@@ -1956,13 +1587,16 @@ export default function Reports() {
           <div className="mt-6">
             <HouseholdBrandsTable 
               data={householdBrandsData}
-              isLoading={loading}
+              isLoading={loadingStates.householdBrands}
             />
           </div>
         </CollapsibleSection>
 
         {/* Household Brands Details Section */}
-        <CollapsibleSection title="Household Brands Details">
+        <CollapsibleSection 
+          title="Household Brands Details"
+          onToggle={(isExpanded) => handleSectionExpand('householdBrandsDetails', isExpanded)}
+        >
           <SectionFilters
             selectedYear={filters.selectedYear}
             setSelectedYear={(year) => setFilters(prev => ({ ...prev, selectedYear: year }))}
@@ -1995,7 +1629,7 @@ export default function Reports() {
           <div className="mt-6">
             <HouseholdBrandsDetailsTable 
               data={householdBrandsDetailsData}
-              isLoading={loading}
+              isLoading={loadingStates.householdBrandsDetails}
             />
           </div>
         </CollapsibleSection>

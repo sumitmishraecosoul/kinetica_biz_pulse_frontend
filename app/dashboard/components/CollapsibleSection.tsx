@@ -1,24 +1,37 @@
 'use client';
 
-import { useState, ReactNode } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
 
 interface CollapsibleSectionProps {
   title: string;
   children: ReactNode;
   defaultExpanded?: boolean;
   className?: string;
+  onToggle?: (isExpanded: boolean) => void;
 }
 
 export default function CollapsibleSection({ 
   title, 
   children, 
   defaultExpanded = false,
-  className = ""
+  className = "",
+  onToggle
 }: CollapsibleSectionProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
+  // Call onToggle when component mounts if defaultExpanded is true
+  useEffect(() => {
+    if (defaultExpanded && onToggle) {
+      onToggle(true);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const toggleExpanded = () => {
-    setIsExpanded(!isExpanded);
+    const newExpandedState = !isExpanded;
+    setIsExpanded(newExpandedState);
+    if (onToggle) {
+      onToggle(newExpandedState);
+    }
   };
 
   return (
