@@ -21,6 +21,7 @@ export default function Dashboard() {
   const memoizedFilters = useMemo(() => filters, [filters.year, filters.month, filters.business, filters.channel, filters.brand, filters.category, filters.customer]);
 
   const handleFiltersChange = useCallback((newFilters: any) => {
+    console.log('Dashboard: Filters changed:', newFilters);
     setFilters(newFilters);
   }, []);
 
@@ -35,6 +36,9 @@ export default function Dashboard() {
         
         {/* fGP Analysis Section */}
         <AnalyticsSection title="fGP Analysis" filters={memoizedFilters} />
+        
+        {/* Cases Analysis Section */}
+        <AnalyticsSection title="Cases Analysis" filters={memoizedFilters} />
       </div>
     </div>
   );

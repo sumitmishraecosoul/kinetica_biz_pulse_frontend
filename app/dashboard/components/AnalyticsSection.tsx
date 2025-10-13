@@ -59,6 +59,8 @@ const AnalyticsSection = ({ title, filters }: AnalyticsSectionProps) => {
       try {
         setLoading(true);
         setError(null);
+        
+        console.log(`${title}: Fetching data with filters:`, filters);
 
         let businessPromise, channelPromise, monthlyPromise;
 
@@ -66,6 +68,10 @@ const AnalyticsSection = ({ title, filters }: AnalyticsSectionProps) => {
           businessPromise = dashboardChartsAPI.getFGPByBusiness(filters);
           channelPromise = dashboardChartsAPI.getFGPByChannel(filters);
           monthlyPromise = dashboardChartsAPI.getFGPMonthlyTrend(filters);
+        } else if (title === 'Cases Analysis') {
+          businessPromise = dashboardChartsAPI.getCasesByBusiness(filters);
+          channelPromise = dashboardChartsAPI.getCasesByChannel(filters);
+          monthlyPromise = dashboardChartsAPI.getCasesMonthlyTrend(filters);
         } else {
           businessPromise = dashboardChartsAPI.getGSalesByBusiness(filters);
           channelPromise = dashboardChartsAPI.getGSalesByChannel(filters);
@@ -132,7 +138,7 @@ const AnalyticsSection = ({ title, filters }: AnalyticsSectionProps) => {
         {/* Left Chart - Business Unit */}
         <div className="dashboard-card p-6">
           <h3 className="text-sm font-medium text-dashboard-gray-dark mb-4">
-            {title === 'fGP Analysis' ? 'fGP by Business Unit' : 'gSales by Business Unit'}
+            {title === 'fGP Analysis' ? 'fGP by Business Unit' : title === 'Cases Analysis' ? 'Cases by Business Unit' : 'gSales by Business Unit'}
           </h3>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={businessData}>
@@ -154,7 +160,7 @@ const AnalyticsSection = ({ title, filters }: AnalyticsSectionProps) => {
         {/* Right Chart - Channel */}
         <div className="dashboard-card p-6">
           <h3 className="text-sm font-medium text-dashboard-gray-dark mb-4">
-            {title === 'fGP Analysis' ? 'fGP by Channel' : 'gSales by Channel'}
+            {title === 'fGP Analysis' ? 'fGP by Channel' : title === 'Cases Analysis' ? 'Cases by Channel' : 'gSales by Channel'}
           </h3>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={channelData}>
@@ -177,7 +183,7 @@ const AnalyticsSection = ({ title, filters }: AnalyticsSectionProps) => {
       {/* Line Chart */}
       <div className="dashboard-card p-6">
         <h3 className="text-sm font-medium text-dashboard-gray-dark mb-4">
-          {title === 'fGP Analysis' ? 'fGP Monthly Trend' : 'gSales Monthly Trend'}
+          {title === 'fGP Analysis' ? 'fGP Monthly Trend' : title === 'Cases Analysis' ? 'Cases Monthly Trend' : 'gSales Monthly Trend'}
         </h3>
         <ResponsiveContainer width="100%" height={250}>
           <LineChart data={monthlyData}>

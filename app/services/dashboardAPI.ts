@@ -34,5 +34,21 @@ export const dashboardChartsAPI = {
   getGSalesMonthlyTrend: async (filters: any) => {
     const response = await axios.post(`${API_BASE_URL}/dashboard/gsales-monthly-trend`, filters);
     return response.data;
+  },
+
+  // Cases Charts
+  getCasesByBusiness: async (filters: any) => {
+    const response = await axios.post(`${API_BASE_URL}/dashboard/cases-by-business`, filters);
+    return response.data;
+  },
+
+  getCasesByChannel: async (filters: any) => {
+    const response = await axios.post(`${API_BASE_URL}/dashboard/cases-by-channel`, filters);
+    return response.data;
+  },
+
+  getCasesMonthlyTrend: async (filters: any) => {
+    const response = await axios.post(`${API_BASE_URL}/dashboard/cases-monthly-trend`, filters);
+    return response.data;
   }
 };
