@@ -37,3 +37,6 @@ coverage/
 # Optional: package-lock or yarn.lock (only if you don't want to lock dependencies)
 # yarn.lock
 # package-lock.json
+".next/" 
+"*.pack.gz" 
+"*.hot-update.js" 
