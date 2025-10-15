@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import * as dashboardAPI from '../../services/dashboardAPI';
 // Using existing icon system instead of lucide-react
 
 interface FilterOption {
@@ -88,6 +89,7 @@ interface FilterBarProps {
 }
 
 export default function FilterBar({ onFiltersChange }: FilterBarProps) {
+  // Start with hardcoded values so filters always show
   const [filters, setFilters] = useState({
     year: [
       { label: "2023", value: "2023", checked: true },
@@ -157,6 +159,83 @@ export default function FilterBar({ onFiltersChange }: FilterBarProps) {
       { label: "Canada", value: "Canada", checked: true },
     ],
   });
+
+  // Fetch real data from API and update filters
+  useEffect(() => {
+    const fetchFilterOptions = async () => {
+      try {
+        console.log('FilterBar: Fetching filter options from API...');
+        const response = await dashboardAPI.getFilterOptions();
+        
+        console.log('FilterBar: API Response received');
+        console.log('Full API Response:', response);
+        console.log('Response data:', response.data);
+        console.log('Response data.data:', response.data?.data);
+        console.log('Brands count:', response.data?.brands?.length || 0);
+        console.log('Customers count:', response.data?.customers?.length || 0);
+        console.log('Categories count:', response.data?.categories?.length || 0);
+        
+        // Update filters with real data from API
+        const apiData = response.data;
+        setFilters(prevFilters => ({
+          year: (apiData?.years || []).map((year: number) => ({
+            label: year.toString(),
+            value: year.toString(),
+            checked: true
+          })),
+          month: (apiData?.months || []).map((month: string) => ({
+            label: month,
+            value: month,
+            checked: false
+          })),
+          business: (apiData?.businessAreas || []).map((business: string) => ({
+            label: business,
+            value: business,
+            checked: true
+          })),
+          channel: (apiData?.channels || []).map((channel: string) => ({
+            label: channel,
+            value: channel,
+            checked: true
+          })),
+          brand: (apiData?.brands || []).map((brand: string) => ({
+            label: brand,
+            value: brand,
+            checked: true
+          })),
+          category: (apiData?.categories || []).map((category: string) => ({
+            label: category,
+            value: category,
+            checked: true
+          })),
+          customer: (apiData?.customers || []).map((customer: string) => ({
+            label: customer,
+            value: customer,
+            checked: true
+          })),
+        }));
+        
+        console.log('FilterBar: Filters updated with real data');
+      } catch (error) {
+        console.error('FilterBar: Error fetching filter options:', error);
+        // Keep existing hardcoded values if API fails
+      }
+    };
+    
+    fetchFilterOptions();
+  }, []);
+
+  // Call onFiltersChange whenever filters are updated
+  useEffect(() => {
+    const selectedFilters = Object.keys(filters).reduce((acc, key) => {
+      acc[key] = filters[key as keyof typeof filters]
+        .filter(option => option.checked)
+        .map(option => option.value);
+      return acc;
+    }, {} as Record<string, string[]>);
+    
+    onFiltersChange(selectedFilters);
+  }, [filters, onFiltersChange]);
 
   const handleFilterChange = (filterType: string, value: string) => {
     setFilters(prev => ({

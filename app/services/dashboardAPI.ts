@@ -52,3 +52,9 @@ export const dashboardChartsAPI = {
     return response.data;
   }
 };
+
+// Filter Options API
+export const getFilterOptions = async () => {
+  const response = await axios.get(`${API_BASE_URL}/dashboard/filter-options`);
+  return response.data;
+};
