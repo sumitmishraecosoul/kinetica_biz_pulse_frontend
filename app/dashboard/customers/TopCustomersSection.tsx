@@ -37,23 +37,23 @@ export default function TopCustomersSection({
           dashboardAPI.getTopPerformers(params),
           dashboardAPI.getRisk({ ...params, metric: undefined })
         ]);
-        const top = (topRes.data.data || []).map((item: any, idx: number) => ({
+        const top = (topRes.data.data.data || []).map((item: any, idx: number) => ({
           rank: idx + 1,
           name: item.name,
           channel: selectedChannel === 'All' ? '' : selectedChannel,
           revenue: item.value,
           margin: undefined as number | undefined,
-          growth: item.growth,
+          growth: Number(item.growth.toFixed(2)),
           orders: undefined as number | undefined,
           avgOrderValue: undefined as number | undefined,
           status: item.growth > 10 ? 'growing' : item.growth < 0 ? 'declining' : 'stable',
         }));
         setTopCustomers(top);
-        const risks = (riskRes.data.data || []).slice(0, 3).map((r: any) => ({
+        const risks = (riskRes.data.data.data || []).slice(0, 3).map((r: any) => ({
           name: r.name,
           channel: selectedChannel === 'All' ? '' : selectedChannel,
           revenue: r.value,
-          decline: r.trend < 0 ? Number(r.trend.toFixed(1)) : 0,
+          decline: r.trend < 0 ? Number(r.trend.toFixed(2)) : 0,
           lastOrder: '-',
           riskLevel: r.riskLevel,
         }));
@@ -130,17 +130,33 @@ export default function TopCustomersSection({
           </div>
         </div>
 
-        <div className="space-y-4">
+        {/* Table Header */}
+        <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-gray-50 rounded-lg text-sm font-medium text-gray-600 border-b">
+          <div className="col-span-1 text-center">#</div>
+          <div className="col-span-3">Customer</div>
+          <div className="col-span-2 text-right">Revenue</div>
+          <div className="col-span-2 text-right">Growth</div>
+          <div className="col-span-2 text-center">Status</div>
+          <div className="col-span-2 text-center">Actions</div>
+        </div>
+
+        {/* Table Body */}
+        <div className="space-y-2">
           {topCustomers.map((customer, index) => (
             <div
               key={index}
               onClick={() => handleCustomerClick(customer, 'detail')}
-              className="flex items-center justify-between p-4 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors duration-200 group"
+              className="grid grid-cols-12 gap-4 px-4 py-3 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors duration-200 group"
             >
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center justify-center w-8 h-8 bg-gray-100 text-gray-600 rounded-full text-sm font-medium">
+              {/* Rank */}
+              <div className="col-span-1 flex items-center justify-center">
+                <div className="w-8 h-8 bg-gray-100 text-gray-600 rounded-full text-sm font-medium flex items-center justify-center">
                   {customer.rank}
                 </div>
+              </div>
+              
+              {/* Customer Name */}
+              <div className="col-span-3 flex items-center">
                 <div>
                   <h4 className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors duration-200">
                     {customer.name}
@@ -149,32 +165,34 @@ export default function TopCustomersSection({
                 </div>
               </div>
               
-              <div className="flex items-center space-x-6">
+              {/* Revenue */}
+              <div className="col-span-2 flex items-center justify-end">
                 <div className="text-right">
                   <div className="font-medium text-gray-900">{formatCurrency(customer.revenue)}</div>
                   {customer.orders && <div className="text-sm text-gray-500">{customer.orders} orders</div>}
                 </div>
-                
-                {typeof customer.margin === 'number' && (
-                  <div className="text-right">
-                    <div className="font-medium text-gray-900">{customer.margin.toFixed(1)}%</div>
-                    <div className="text-sm text-gray-500">margin</div>
-                  </div>
-                )}
-                
+              </div>
+              
+              {/* Growth */}
+              <div className="col-span-2 flex items-center justify-end">
                 <div className="text-right">
                   <div className={`font-medium ${customer.growth > 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {customer.growth > 0 ? '+' : ''}{customer.growth}%
                   </div>
-                  <div className="text-sm text-gray-500">growth</div>
                 </div>
-                
+              </div>
+              
+              {/* Status */}
+              <div className="col-span-2 flex items-center justify-center">
                 {customer.status && (
-                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(customer.status)}`}>
+                  <div className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(customer.status)}`}>
                     {customer.status}
                   </div>
                 )}
-                
+              </div>
+              
+              {/* Actions */}
+              <div className="col-span-2 flex items-center justify-center">
                 <div className="w-6 h-6 flex items-center justify-center">
                   <i className="ri-arrow-right-s-line text-gray-400 group-hover:text-gray-600 transition-colors duration-200"></i>
                 </div>
@@ -195,33 +213,55 @@ export default function TopCustomersSection({
           </div>
         </div>
 
-        <div className="space-y-4">
+        {/* At-Risk Table Header */}
+        <div className="grid grid-cols-12 gap-3 px-3 py-2 bg-red-50 rounded-lg text-xs font-medium text-gray-600 border-b border-red-200">
+          <div className="col-span-4">Customer</div>
+          <div className="col-span-2 text-right">Revenue</div>
+          <div className="col-span-2 text-right">Decline</div>
+          <div className="col-span-2 text-center">Risk Level</div>
+          <div className="col-span-2 text-center">Last Order</div>
+        </div>
+
+        {/* At-Risk Table Body */}
+        <div className="space-y-2">
           {atRiskCustomers.map((customer, index) => (
             <div
               key={index}
               onClick={() => handleCustomerClick(customer, 'risk')}
-              className={`p-4 rounded-lg border cursor-pointer transition-colors duration-200 hover:bg-gray-50 ${getRiskColor(customer.riskLevel)}`}
+              className={`grid grid-cols-12 gap-3 px-3 py-3 rounded-lg border cursor-pointer transition-colors duration-200 hover:bg-gray-50 ${getRiskColor(customer.riskLevel)}`}
             >
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium text-gray-900">{customer.name}</h4>
-                <span className="text-xs font-medium uppercase tracking-wider">
-                  {customer.riskLevel} risk
+              {/* Customer Name */}
+              <div className="col-span-4 flex items-center">
+                <div>
+                  <h4 className="font-medium text-gray-900 text-sm">{customer.name}</h4>
+                  {customer.channel && <p className="text-xs text-gray-500">{customer.channel}</p>}
+                </div>
+              </div>
+              
+              {/* Revenue */}
+              <div className="col-span-2 flex items-center justify-end">
+                <span className="font-medium text-sm">{formatCurrency(customer.revenue)}</span>
+              </div>
+              
+              {/* Decline */}
+              <div className="col-span-2 flex items-center justify-end">
+                <span className="font-medium text-red-600 text-sm">{customer.decline}%</span>
+              </div>
+              
+              {/* Risk Level */}
+              <div className="col-span-2 flex items-center justify-center">
+                <span className={`px-2 py-1 rounded-full text-xs font-medium uppercase tracking-wider ${
+                  customer.riskLevel === 'high' ? 'bg-red-100 text-red-700' : 
+                  customer.riskLevel === 'medium' ? 'bg-yellow-100 text-yellow-700' : 
+                  'bg-green-100 text-green-700'
+                }`}>
+                  {customer.riskLevel}
                 </span>
               </div>
-              <p className="text-sm text-gray-600 mb-2">{customer.channel}</p>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Revenue:</span>
-                  <span className="font-medium">{formatCurrency(customer.revenue)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Decline:</span>
-                  <span className="font-medium text-red-600">{customer.decline}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Last order:</span>
-                  <span className="font-medium">{customer.lastOrder}</span>
-                </div>
+              
+              {/* Last Order */}
+              <div className="col-span-2 flex items-center justify-center">
+                <span className="font-medium text-sm text-gray-500">{customer.lastOrder}</span>
               </div>
             </div>
           ))}
