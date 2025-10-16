@@ -97,18 +97,18 @@ export default function FilterBar({ onFiltersChange }: FilterBarProps) {
       { label: "2025", value: "2025", checked: true },
     ],
     month: [
-      { label: "January", value: "Jan", checked: false },
-      { label: "February", value: "Feb", checked: false },
-      { label: "March", value: "Mar", checked: false },
-      { label: "April", value: "Apr", checked: false },
-      { label: "May", value: "May", checked: false },
-      { label: "June", value: "Jun", checked: false },
-      { label: "July", value: "Jul", checked: false },
-      { label: "August", value: "Aug", checked: false },
-      { label: "September", value: "Sep", checked: false },
-      { label: "October", value: "Oct", checked: false },
-      { label: "November", value: "Nov", checked: false },
-      { label: "December", value: "Dec", checked: false },
+      { label: "January", value: "Jan", checked: true },
+      { label: "February", value: "Feb", checked: true },
+      { label: "March", value: "Mar", checked: true },
+      { label: "April", value: "Apr", checked: true },
+      { label: "May", value: "May", checked: true },
+      { label: "June", value: "Jun", checked: true },
+      { label: "July", value: "Jul", checked: true },
+      { label: "August", value: "Aug", checked: true },
+      { label: "September", value: "Sep", checked: true },
+      { label: "October", value: "Oct", checked: true },
+      { label: "November", value: "Nov", checked: true },
+      { label: "December", value: "Dec", checked: true },
     ],
     business: [
       { label: "Brillo, Goddards & KMPL", value: "Brillo, Goddards & KMPL", checked: true },
@@ -186,7 +186,7 @@ export default function FilterBar({ onFiltersChange }: FilterBarProps) {
           month: (apiData?.months || []).map((month: string) => ({
             label: month,
             value: month,
-            checked: false
+            checked: true
           })),
           business: (apiData?.businessAreas || []).map((business: string) => ({
             label: business,
