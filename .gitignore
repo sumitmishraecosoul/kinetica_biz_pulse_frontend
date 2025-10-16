@@ -1,8 +1,13 @@
 # Node modules (never commit this)
 node_modules/
 
+# Next.js build output
+.next/
+out/
+
 # Build output
 /build
+/dist
 
 # System files
 .DS_Store
@@ -12,6 +17,7 @@ Thumbs.db
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
 # Env files (for API keys, etc.)
 .env
@@ -23,20 +29,37 @@ yarn-error.log*
 # IDE-specific
 .vscode/
 .idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
 
 # OS specific
 .AppleDouble
 .LSOverride
-
-# Mac system files
 ._*
 
 # Testing
 coverage/
 
+# Next.js cache and build files
+.next/cache/
+.next/static/
+.next/server/
+.next/trace
+*.pack.gz
+*.hot-update.js
+*.hot-update.json
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
 # Optional: package-lock or yarn.lock (only if you don't want to lock dependencies)
 # yarn.lock
-# package-lock.json
-".next/" 
-"*.pack.gz" 
-"*.hot-update.js" 
+# package-lock.json 
