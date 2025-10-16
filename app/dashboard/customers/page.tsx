@@ -12,8 +12,12 @@ import CustomerDrillDownModal from './CustomerDrillDownModal';
 
 export default function CustomerAnalysis() {
   const [selectedPeriod, setSelectedPeriod] = useState('YTD');
+  const [selectedYear, setSelectedYear] = useState('All');
+  const [selectedMonth, setSelectedMonth] = useState('All');
   const [selectedChannel, setSelectedChannel] = useState('All');
   const [selectedCustomer, setSelectedCustomer] = useState('All');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedSubCategory, setSelectedSubCategory] = useState('All');
   const [selectedMetric, setSelectedMetric] = useState('revenue');
   const [selectedBusinessArea, setSelectedBusinessArea] = useState('All');
   const [drillDownData, setDrillDownData] = useState(null);
@@ -27,6 +31,27 @@ export default function CustomerAnalysis() {
   const closeModal = () => {
     setIsModalOpen(false);
     setDrillDownData(null);
+  };
+
+  const handleApplyFilters = () => {
+    console.log('Applying filters:', {
+      year: selectedYear,
+      month: selectedMonth,
+      channel: selectedChannel,
+      customer: selectedCustomer,
+      category: selectedCategory,
+      subCategory: selectedSubCategory
+    });
+    // Filters will be automatically applied to components that use these state values
+  };
+
+  const handleResetFilters = () => {
+    setSelectedYear('All');
+    setSelectedMonth('All');
+    setSelectedChannel('All');
+    setSelectedCustomer('All');
+    setSelectedCategory('All');
+    setSelectedSubCategory('All');
   };
 
   return (
@@ -53,26 +78,28 @@ export default function CustomerAnalysis() {
         </div>
 
         <CustomerFilters
-          selectedYear={selectedPeriod}
-          setSelectedYear={setSelectedPeriod}
-          selectedMonth="All"
-          setSelectedMonth={() => {}}
+          selectedYear={selectedYear}
+          setSelectedYear={setSelectedYear}
+          selectedMonth={selectedMonth}
+          setSelectedMonth={setSelectedMonth}
           selectedChannel={selectedChannel}
           setSelectedChannel={setSelectedChannel}
-          selectedCategory="All"
-          setSelectedCategory={() => {}}
-          selectedSubCategory="All"
-          setSelectedSubCategory={() => {}}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          selectedSubCategory={selectedSubCategory}
+          setSelectedSubCategory={setSelectedSubCategory}
           selectedCustomer={selectedCustomer}
           setSelectedCustomer={setSelectedCustomer}
-          onApplyFilters={() => {}}
-          onResetFilters={() => {}}
+          onApplyFilters={handleApplyFilters}
+          onResetFilters={handleResetFilters}
           onDownloadCSV={() => {}}
           sectionType="customers"
         />
 
         <CustomerOverviewCards
           selectedPeriod={selectedPeriod}
+          selectedYear={selectedYear}
+          selectedMonth={selectedMonth}
           selectedChannel={selectedChannel}
           selectedCustomer={selectedCustomer}
           selectedBusinessArea={selectedBusinessArea}

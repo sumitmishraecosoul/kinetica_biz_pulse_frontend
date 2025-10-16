@@ -6,6 +6,8 @@ import { dashboardAPI } from '../../services/api';
 
 interface CustomerOverviewCardsProps {
   selectedPeriod: string;
+  selectedYear: string;
+  selectedMonth: string;
   selectedChannel: string;
   selectedCustomer: string;
   selectedBusinessArea: string;
@@ -41,6 +43,8 @@ interface OverviewData {
 
 export default function CustomerOverviewCards({ 
   selectedPeriod, 
+  selectedYear,
+  selectedMonth,
   selectedChannel, 
   selectedCustomer,
   selectedBusinessArea,
@@ -58,6 +62,8 @@ export default function CustomerOverviewCards({
 
         const params = {
           period: selectedPeriod,
+          year: selectedYear !== 'All' ? selectedYear : undefined,
+          month: selectedMonth !== 'All' ? selectedMonth : undefined,
           channel: selectedChannel !== 'All' ? selectedChannel : undefined,
           customer: selectedCustomer !== 'All' ? selectedCustomer : undefined,
           businessArea: selectedBusinessArea !== 'All' ? selectedBusinessArea : undefined,
@@ -86,7 +92,7 @@ export default function CustomerOverviewCards({
     };
 
     fetchOverviewData();
-  }, [selectedPeriod, selectedChannel, selectedCustomer, selectedBusinessArea]);
+  }, [selectedPeriod, selectedYear, selectedMonth, selectedChannel, selectedCustomer, selectedBusinessArea]);
 
   if (loading) {
     return (
