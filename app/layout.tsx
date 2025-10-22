@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Pacifico } from "next/font/google";
 import "./globals.css";
+import { DeepIntelligenceProvider } from "./contexts/DeepIntelligenceContext";
+import DeepIntelligenceButton from "./components/DeepIntelligenceButton";
 
 const pacifico = Pacifico({
   weight: '400',
@@ -34,7 +36,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${pacifico.variable} antialiased`}
       >
-        {children}
+        <DeepIntelligenceProvider>
+          {children}
+          <DeepIntelligenceButton />
+        </DeepIntelligenceProvider>
       </body>
     </html>
   );
