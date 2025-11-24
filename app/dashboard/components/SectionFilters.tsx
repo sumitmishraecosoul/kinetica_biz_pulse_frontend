@@ -24,7 +24,7 @@ interface SectionFiltersProps {
   onResetFilters: () => void;
   onDownloadCSV: () => void;
   isDownloading?: boolean;
-  sectionType?: 'summary' | 'trend' | 'sales-to-fgp' | 'food-brands' | 'food-brands-details' | 'household-brands' | 'household-brands-details';
+  sectionType?: 'summary' | 'trend' | 'sales-to-fgp' | 'food-brands' | 'food-brands-details' | 'household-brands' | 'household-brands-details' | 'brillo-killeen' | 'kinetica' | 'categories-subcategory' | 'categories' | 'private-label' | 'npd' | 'wsroi-channel' | 'wsukni-channel' | 'foodservice-skus';
   // Hide filter options
   hideBusinessArea?: boolean;
   hideBrand?: boolean;
